@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.purchase;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.entity.AbstractDto;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Category;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,9 +11,8 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PurchaseDto {
+public class PurchaseDto extends AbstractDto {
 
-    private Integer id;
     private Category category;
     private Double cost;
     private Integer quantity;

@@ -30,8 +30,4 @@ public class Purchase extends AbstractEntity {
         this.totalCost = cost * quantity;
         this.purchaseDate = purchaseDate;
     }
-
-    public Double getTotalCost() {
-        return cost * quantity;
-    }
 }
