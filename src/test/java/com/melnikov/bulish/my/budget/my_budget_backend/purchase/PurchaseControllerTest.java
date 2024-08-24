@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -35,6 +36,7 @@ public class PurchaseControllerTest {
     private PurchaseRepository repo;
 
     @Test
+    @WithMockUser(username = "test", password = "test")
     public void findAllPurchases() throws Exception {
         String url = "/purchases";
 
@@ -50,6 +52,7 @@ public class PurchaseControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "test", password = "test")
     public void createPurchase() throws JsonProcessingException, Exception {
             String url = "/purchases";
             PurchaseDto purchaseDto = new PurchaseDto(Category.CLOTHE, 123.80, 2, new Date());
@@ -70,6 +73,7 @@ public class PurchaseControllerTest {
         }
 
     @Test
+    @WithMockUser(username = "test", password = "test")
     public void updatePurchase() throws JsonProcessingException, Exception {
         Integer purchaseId = 8;
         String url = "/purchases/" + purchaseId;
@@ -94,6 +98,7 @@ public class PurchaseControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "test", password = "test")
     public void deletePurchase() throws Exception {
         Integer purchaseId = 8;
         String url = "/purchases/" + purchaseId;

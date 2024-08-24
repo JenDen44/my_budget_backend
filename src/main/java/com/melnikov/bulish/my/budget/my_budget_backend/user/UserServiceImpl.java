@@ -1,7 +1,11 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.user;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.token.JwtTokenService;
+import com.melnikov.bulish.my.budget.my_budget_backend.token.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,7 +16,6 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepo;
     private final UserMapper userMapper;
-
     @Autowired
     public UserServiceImpl(UserRepository userRepo, UserMapper userMapper) {
         this.userRepo = userRepo;

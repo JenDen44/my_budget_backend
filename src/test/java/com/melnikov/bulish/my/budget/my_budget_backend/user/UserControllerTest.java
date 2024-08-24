@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.security.test.context.support.WithMockUser;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -31,6 +32,7 @@ public class UserControllerTest {
     private UserRepository userRepo;
 
     @Test
+    @WithMockUser(username = "test", password = "test")
     public void findAllUsers() throws Exception {
         String url = "/users";
 
@@ -46,6 +48,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "test", password = "test")
     public void createUser() throws  Exception {
         String url = "/users";
         UserDto userDto = new UserDto("user@yandex.ru","1273пупв");
@@ -66,6 +69,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "test", password = "test")
     public void updateUser() throws JsonProcessingException, Exception {
         Integer userId = 2;
         String url = "/users/" + userId;
@@ -90,6 +94,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "test", password = "test")
     public void deleteUser() throws Exception {
         Integer userId = 2;
         String url = "/users/" + userId;
