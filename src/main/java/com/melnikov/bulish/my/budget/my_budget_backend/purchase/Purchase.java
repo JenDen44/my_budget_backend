@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "purchases")
@@ -21,9 +21,9 @@ public class Purchase extends AbstractEntity {
     private Double cost;
     private Integer quantity;
     private Double totalCost;
-    private Date purchaseDate;
+    private LocalDate purchaseDate;
 
-    public Purchase(Category category, Double cost, Integer quantity, Date purchaseDate) {
+    public Purchase(Category category, Double cost, Integer quantity, LocalDate purchaseDate) {
         this.category = category;
         this.cost = cost;
         this.quantity = quantity;

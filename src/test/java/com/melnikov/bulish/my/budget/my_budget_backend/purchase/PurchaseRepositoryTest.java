@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @DataJpaTest
@@ -24,12 +24,8 @@ public class PurchaseRepositoryTest {
 
     @Test
     public void createPurchase() {
-        Purchase purchase = new Purchase();
-        purchase.setPurchaseDate(new Date());
-        purchase.setCost(3293.78);
-        purchase.setCategory(Category.CLOTHE);
-        purchase.setQuantity(2);
-        purchase.setTotalCost(purchase.getTotalCost());
+        LocalDate date = LocalDate.now();
+        Purchase purchase = new Purchase(Category.CLOTHE, 679.0, 2, date);
 
         Purchase savedPurchase = repo.save(purchase);
         assertThat(savedPurchase).isNotNull();
@@ -77,7 +73,7 @@ public class PurchaseRepositoryTest {
     @Test
     public void deletePurchase() {
         Integer id = 6;
-        repo.deleteById(6);
+        repo.deleteById(id);
         PurchaseNotFoundException exception = assertThrows(PurchaseNotFoundException.class, () -> {
             Purchase purchase = repo.findById(id)
                     .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
