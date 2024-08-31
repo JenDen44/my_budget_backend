@@ -3,7 +3,6 @@ package com.melnikov.bulish.my.budget.my_budget_backend.token;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.melnikov.bulish.my.budget.my_budget_backend.auth.AuthenticationRequest;
 import com.melnikov.bulish.my.budget.my_budget_backend.auth.AuthenticationResponse;
-import com.melnikov.bulish.my.budget.my_budget_backend.auth.RefreshTokenResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.auth.RegisterRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,7 +88,7 @@ public class TokenControllerTest {
                 .andReturn();
 
         String response = result.getResponse().getContentAsString();
-        RefreshTokenResponse responseFromServer = objectMapper.readValue(response, RefreshTokenResponse.class);
+        AuthenticationResponse responseFromServer = objectMapper.readValue(response, AuthenticationResponse.class);
         String accessToken = responseFromServer.getAccessToken();
 
         assertThat(accessToken).isNotNull();

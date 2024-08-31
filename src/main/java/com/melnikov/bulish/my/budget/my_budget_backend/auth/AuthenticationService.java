@@ -84,7 +84,7 @@ public class AuthenticationService {
         tokenRepository.saveAll(validUserTokens);
     }
 
-    public RefreshTokenResponse refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public AuthenticationResponse refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         final String refreshToken;
         final String userEmail;
@@ -101,15 +101,15 @@ public class AuthenticationService {
                     .orElseThrow(() -> new UserNotFoundException("User not found in DB by username/email " + userEmail));
 
             if (jwtService.isTokenValid(refreshToken, user)) {
-                var accessToken = jwtService.generateToken(user);
+                var newJwtToken = jwtService.generateToken(user);
+                var newRefreshToken = jwtService.generateRefreshToken(user);
                 revokeAllUserTokens(user);
-                tokenRepository.save(tokenFromRepository);
+                saveUserToken(user, newRefreshToken);
 
-                var authResponse = RefreshTokenResponse.builder()
-                        .accessToken(accessToken)
+                return AuthenticationResponse.builder()
+                        .accessToken(newJwtToken)
+                        .refreshToken(newRefreshToken)
                         .build();
-
-                return authResponse;
 
             }else {
                 throw new RuntimeException("The token is not valid");
