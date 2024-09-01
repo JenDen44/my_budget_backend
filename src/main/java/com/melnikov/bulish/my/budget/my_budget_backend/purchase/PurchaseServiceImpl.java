@@ -11,12 +11,10 @@ import java.util.List;
 public class PurchaseServiceImpl implements PurchaseService {
 
     private final PurchaseRepository purchaseRepo;
-    private final PurchaseMapper purchaseMapper;
 
     @Autowired
     public PurchaseServiceImpl(PurchaseRepository purchaseRepo, PurchaseMapper purchaseMapper) {
         this.purchaseRepo = purchaseRepo;
-        this.purchaseMapper = purchaseMapper;
     }
 
     @Override
@@ -24,13 +22,14 @@ public class PurchaseServiceImpl implements PurchaseService {
         Purchase purchase = purchaseRepo.findById(id)
                 .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
 
-            return purchaseMapper.toDto(purchase);
+            return new PurchaseDto(purchase);
     }
 
     @Override
     public List<PurchaseDto> findAllPurchases() {
-        List<Purchase> purchases = (List<Purchase>) purchaseRepo.findAll();
-        List<PurchaseDto> purchaseDtoList = purchases.stream().map(purchase -> purchaseMapper.toDto(purchase)).toList();
+        List<Purchase> purchases =  purchaseRepo.findAll();
+        List<PurchaseDto> purchaseDtoList = purchases.stream().map(p ->
+                new PurchaseDto(p)).toList();
 
             return purchaseDtoList;
     }
@@ -38,10 +37,9 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     @Override
     public PurchaseDto savePurchase(PurchaseDto purchase) {
-        Purchase purchaseToDB = purchaseMapper.toEntity(purchase);
-        Purchase purchaseSavedToDB = purchaseRepo.save(purchaseToDB);
+        Purchase purchaseSavedToDB = purchaseRepo.save(new Purchase(purchase));
 
-            return purchaseMapper.toDto(purchaseSavedToDB);
+            return new PurchaseDto(purchaseSavedToDB);
     }
 
     @Override
@@ -49,9 +47,12 @@ public class PurchaseServiceImpl implements PurchaseService {
         Purchase purchaseFromDB = purchaseRepo.findById(id)
                 .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
 
-        Purchase updatedPurchase = purchaseRepo.save(purchaseMapper.toEntity(purchase));
+        purchaseFromDB.setPurchaseDate(purchase.getPurchaseDate());
+        purchaseFromDB.setCost(purchase.getCost());
+        purchaseFromDB.setCategory(purchase.getCategory());
+        purchaseFromDB.setQuantity(purchase.getQuantity());
 
-            return purchaseMapper.toDto(updatedPurchase);
+            return new PurchaseDto(purchaseRepo.save(purchaseFromDB));
     }
 
     @Override

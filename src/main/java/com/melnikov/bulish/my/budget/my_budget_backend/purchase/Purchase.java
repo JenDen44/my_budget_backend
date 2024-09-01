@@ -30,4 +30,13 @@ public class Purchase extends AbstractEntity {
         this.totalCost = cost * quantity;
         this.purchaseDate = purchaseDate;
     }
+
+    public Purchase(PurchaseDto purchaseDto) {
+        this.id = purchaseDto.getId();
+        this.category = purchaseDto.getCategory();
+        this.cost = purchaseDto.getCost();
+        this.quantity = purchaseDto.getQuantity();
+        this.totalCost = cost * quantity;
+        this.purchaseDate = purchaseDto.getPurchaseDate();
+    }
 }

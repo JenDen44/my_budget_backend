@@ -11,7 +11,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,7 +55,8 @@ public class PurchaseControllerTest {
     @WithMockUser(username = "test", password = "test")
     public void createPurchase() throws JsonProcessingException, Exception {
             String url = "/purchases";
-            PurchaseDto purchaseDto = new PurchaseDto(Category.CLOTHE, 123.80, 2, new Date());
+            LocalDate today = LocalDate.now();
+            PurchaseDto purchaseDto = new PurchaseDto(Category.CLOTHE, 123.80, 2, today);
 
             MvcResult result = mockMvc.perform(post(url).contentType("application/json")
                             .content(objectMapper.writeValueAsString(purchaseDto))
@@ -77,8 +78,9 @@ public class PurchaseControllerTest {
     public void updatePurchase() throws JsonProcessingException, Exception {
         Integer purchaseId = 8;
         String url = "/purchases/" + purchaseId;
+        LocalDate today = LocalDate.now();
 
-        PurchaseDto purchaseDto = new PurchaseDto(Category.FOOD, 123.80, 2, new Date());
+        PurchaseDto purchaseDto = new PurchaseDto(Category.FOOD, 123.80, 2, today);
 
         MvcResult result = mockMvc.perform(put(url).contentType("application/json")
                         .content(objectMapper.writeValueAsString(purchaseDto))

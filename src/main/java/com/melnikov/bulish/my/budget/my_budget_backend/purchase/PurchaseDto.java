@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -17,13 +17,22 @@ public class PurchaseDto extends AbstractDto {
     private Double cost;
     private Integer quantity;
     private Double totalCost;
-    private Date purchaseDate;
+    private LocalDate purchaseDate;
 
-    public PurchaseDto(Category category, Double cost, Integer quantity, Date purchaseDate) {
+    public PurchaseDto(Category category, Double cost, Integer quantity, LocalDate purchaseDate) {
         this.category = category;
         this.cost = cost;
         this.quantity = quantity;
         this.totalCost = cost * quantity;
         this.purchaseDate = purchaseDate;
+    }
+
+    public PurchaseDto(Purchase purchase) {
+        this.id = purchase.getId();
+        this.category = purchase.getCategory();
+        this.cost = purchase.getCost();
+        this.quantity = purchase.getQuantity();
+        this.totalCost = cost * quantity;
+        this.purchaseDate = purchase.getPurchaseDate();
     }
 }
