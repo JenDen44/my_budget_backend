@@ -1,11 +1,9 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.report;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -20,16 +18,16 @@ public class ReportController {
         this.reportService = reportService;
     }
 
-    @GetMapping("table/{startDate}/{endDate}")
-    public ResponseEntity<List<ReportTable>> getTableReportDataByDatePeriod(@PathVariable("startDate") String startDate,
-                                                                       @PathVariable("endDate") String endDate) {
+    @GetMapping("table")
+    public ResponseEntity<List<ReportTable>> getTableReportDataByDatePeriod(@JsonFormat(pattern="y-M-d")@RequestParam("startDate") String startDate,
+                                                                            @JsonFormat(pattern="y-M-d") @RequestParam("endDate") String endDate) {
 
             return ResponseEntity.ok(reportService.getTableReportItemsByDate(startDate,endDate));
     }
 
-    @GetMapping("chart/{startDate}/{endDate}")
-    public ResponseEntity<List<ReportChart>> getChartReportDataByDatePeriod(@PathVariable("startDate") String startDate,
-                                                                       @PathVariable("endDate") String endDate) {
+    @GetMapping("chart")
+    public ResponseEntity<List<ReportChart>> getChartReportDataByDatePeriod(@JsonFormat(pattern="y-M-d")@RequestParam("startDate") String startDate,
+                                                                            @JsonFormat(pattern="y-M-d") @RequestParam("endDate") String endDate) {
 
         return ResponseEntity.ok(reportService.getChartReportItemsByDate(startDate,endDate));
     }

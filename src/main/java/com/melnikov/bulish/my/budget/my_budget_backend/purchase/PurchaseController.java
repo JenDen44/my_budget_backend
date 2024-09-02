@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.purchase;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,14 +33,14 @@ public class PurchaseController {
     }
 
     @PostMapping
-    public ResponseEntity<PurchaseDto> createPurchase(@RequestBody PurchaseDto purchaseDto) {
+    public ResponseEntity<PurchaseDto> createPurchase(@Valid @RequestBody PurchaseDto purchaseDto) {
         System.out.println("createPurchase method is called");
 
            return ResponseEntity.ok(purchaseService.savePurchase(purchaseDto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PurchaseDto> updatePurchase(@RequestBody PurchaseDto purchaseDto,
+    public ResponseEntity<PurchaseDto> updatePurchase(@Valid @RequestBody PurchaseDto purchaseDto,
                                                 @PathVariable Integer id) {
           return ResponseEntity.ok(purchaseService.updatePurchase(purchaseDto, id));
     }

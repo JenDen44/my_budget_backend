@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.purchase;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.AbstractDto;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Category;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,8 @@ public class PurchaseDto extends AbstractDto {
     private Double cost;
     private Integer quantity;
     private Double totalCost;
+
+    @JsonFormat(pattern="y-M-d")
     private LocalDate purchaseDate;
 
     public PurchaseDto(Category category, Double cost, Integer quantity, LocalDate purchaseDate) {

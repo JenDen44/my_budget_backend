@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.user;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,13 +34,13 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
 
              return ResponseEntity.ok(userService.saveUser(userDto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDto> updateUser(@RequestBody UserDto userDto,
+    public ResponseEntity<UserDto> updateUser(@Valid @RequestBody UserDto userDto,
                                                       @PathVariable Integer id) {
             return ResponseEntity.ok(userService.updateUser(userDto, id));
     }

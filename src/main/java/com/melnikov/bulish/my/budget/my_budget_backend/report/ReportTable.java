@@ -12,7 +12,6 @@ import java.util.Map;
 public class ReportTable extends ReportItem {
 
     LocalDate date;
-
     public ReportTable(LocalDate date, Map<Category,Double> purchases) {
         super(purchases);
         this.date = date;

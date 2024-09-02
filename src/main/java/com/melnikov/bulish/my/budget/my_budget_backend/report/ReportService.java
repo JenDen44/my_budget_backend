@@ -27,6 +27,8 @@ public  class ReportService {
         LocalDate endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
 
         List<Purchase> purchases = purchaseRepository.findPurchaseWithTimeBetween(startTime, endTime);
+        if (purchases.isEmpty()) throw new ReportItemNotFoundException("No purchases were found between "
+                + startTime + " " + endDate);
 
         Map<LocalDate, Map<Category, List<Purchase>>> categorizedBCategory2 = purchases.stream()
                 .collect(Collectors.groupingBy(Purchase::getPurchaseDate,
@@ -52,6 +54,8 @@ public  class ReportService {
         LocalDate endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
 
         List<Purchase> purchases = purchaseRepository.findPurchaseWithTimeBetween(startTime, endTime);
+        if (purchases.isEmpty()) throw new ReportItemNotFoundException("No purchases were found between "
+                + startTime + " " + endDate);
 
         Map<Category,List<Purchase>> mapPurchasesByCategory = purchases.stream()
                 .collect(Collectors.groupingBy(Purchase::getCategory));
