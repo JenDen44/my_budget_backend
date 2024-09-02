@@ -7,9 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.text.ParseException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -23,13 +20,17 @@ public class ReportController {
         this.reportService = reportService;
     }
 
-    @GetMapping("/{startDate}/{endDate}")
-    public ResponseEntity<List<ReportItemByDate>> getReportDataByDatePeriod(@PathVariable("startDate") String startDate,
-                                                                           @PathVariable("endDate") String endDate) throws ParseException {
+    @GetMapping("table/{startDate}/{endDate}")
+    public ResponseEntity<List<ReportTable>> getTableReportDataByDatePeriod(@PathVariable("startDate") String startDate,
+                                                                       @PathVariable("endDate") String endDate) {
 
-        LocalDate startTime = LocalDate.parse(startDate, DateTimeFormatter.ofPattern("y-M-d"));
-        LocalDate endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
+            return ResponseEntity.ok(reportService.getTableReportItemsByDate(startDate,endDate));
+    }
 
-            return ResponseEntity.ok(reportService.getReportItemsByDate(startTime,endTime));
+    @GetMapping("chart/{startDate}/{endDate}")
+    public ResponseEntity<List<ReportChart>> getChartReportDataByDatePeriod(@PathVariable("startDate") String startDate,
+                                                                       @PathVariable("endDate") String endDate) {
+
+        return ResponseEntity.ok(reportService.getChartReportItemsByDate(startDate,endDate));
     }
 }

@@ -8,10 +8,13 @@ import java.util.Map;
 
 @Data
 @NoArgsConstructor
-@Builder
 @AllArgsConstructor
-public class ReportItemByDate {
+public class ReportTable extends ReportItem {
 
     LocalDate date;
-    Map<Category, Double> purchasesByCategory;
+
+    public ReportTable(LocalDate date, Map<Category,Double> purchases) {
+        super(purchases);
+        this.date = date;
+    }
 }

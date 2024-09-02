@@ -20,11 +20,21 @@ public class ReportControllerTest {
 
     @Test
     @WithMockUser(username = "test", password = "test")
-    public void findAllReportItemsByDate() throws Exception {
+    public void findTableReportItemsByDate() throws Exception {
         String startDate = "2014-09-01";
         String endDate = "2027-09-30";
-        String requestURL = "/reports/" + startDate + "/" + endDate;
+        String requestURL = "/reports/table/" + startDate + "/" + endDate;
 
          mockMvc.perform(get(requestURL)).andExpect(status().isOk()).andDo(print());
+    }
+
+    @Test
+    @WithMockUser(username = "test", password = "test")
+    public void findChartReportItemsByDate() throws Exception {
+        String startDate = "2014-09-01";
+        String endDate = "2027-09-30";
+        String requestURL = "/reports/chart/" + startDate + "/" + endDate;
+
+        mockMvc.perform(get(requestURL)).andExpect(status().isOk()).andDo(print());
     }
 }
