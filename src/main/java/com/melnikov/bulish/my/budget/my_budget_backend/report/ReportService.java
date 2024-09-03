@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public  class ReportService {
@@ -21,7 +20,8 @@ public  class ReportService {
     }
 
     public List<ReportTable> getTableReportItemsByDate(String startDate, String endDate) {
-        List<ReportTable> reportItemByDates = new ArrayList<>();
+        Map<LocalDate, Map<Category, Double>> map = new HashMap<>();
+        List<ReportTable> reportTables = new ArrayList<>();
 
         LocalDate startTime = LocalDate.parse(startDate, DateTimeFormatter.ofPattern("y-M-d"));
         LocalDate endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
@@ -30,24 +30,21 @@ public  class ReportService {
         if (purchases.isEmpty()) throw new ReportItemNotFoundException("No purchases were found between "
                 + startTime + " " + endDate);
 
-        Map<LocalDate, Map<Category, List<Purchase>>> categorizedBCategory2 = purchases.stream()
-                .collect(Collectors.groupingBy(Purchase::getPurchaseDate,
-                        Collectors.groupingBy(Purchase::getCategory)));
-
-        for (Map.Entry<LocalDate, Map<Category, List<Purchase>>> entry : categorizedBCategory2.entrySet()) {
-            for (Map.Entry<Category, List<Purchase>> innerEntry : entry.getValue().entrySet()) {
-                Map<Category, Double> totalByCategory = new HashMap<>();
-                Optional<Double> total = innerEntry.getValue().stream().map(a -> a.getTotalCost()).reduce((a, b) -> a + b);
-                totalByCategory.put(innerEntry.getKey(), total.get());
-                ReportTable reportItemByDate = new ReportTable(entry.getKey(), totalByCategory);
-                reportItemByDates.add(reportItemByDate);
-            }
+        for (Purchase purchase : purchases) {
+            Map<Category,Double> mapCategory = map.getOrDefault(purchase.getPurchaseDate(), new HashMap<>());
+            double total = mapCategory.getOrDefault(purchase.getCategory(),0.0);
+            total+=purchase.getTotalCost();
+            mapCategory.put(purchase.getCategory(), total);
+            map.put(purchase.getPurchaseDate(), mapCategory);
         }
-        return reportItemByDates;
+
+        for (Map.Entry<LocalDate, Map<Category, Double>> entry: map.entrySet()) {
+            reportTables.add(new ReportTable(entry.getKey(), entry.getValue()));
+        }
+        return reportTables;
     }
 
-    public List<ReportChart> getChartReportItemsByDate(String startDate, String endDate) {
-       List<ReportChart> reportChartsItems = new ArrayList<>();
+    public ReportChart getChartReportItemsByDate(String startDate, String endDate) {
         Map<Category, Double> totalByCategory = new HashMap<>();
 
         LocalDate startTime = LocalDate.parse(startDate, DateTimeFormatter.ofPattern("y-M-d"));
@@ -57,15 +54,13 @@ public  class ReportService {
         if (purchases.isEmpty()) throw new ReportItemNotFoundException("No purchases were found between "
                 + startTime + " " + endDate);
 
-        Map<Category,List<Purchase>> mapPurchasesByCategory = purchases.stream()
-                .collect(Collectors.groupingBy(Purchase::getCategory));
-
-        for (Map.Entry<Category, List<Purchase>> entry: mapPurchasesByCategory.entrySet()) {
-            Optional<Double> total = entry.getValue().stream().map(a -> a.getTotalCost()).reduce((a, b) -> a + b);
-            totalByCategory.put(entry.getKey(),total.get());
-            ReportChart reportChart = new ReportChart(totalByCategory);
-            reportChartsItems.add(reportChart);
+        for (Purchase purchase : purchases) {
+            double total = totalByCategory.getOrDefault(purchase.getCategory(),0.0);
+            total+=purchase.getTotalCost();
+            totalByCategory.put(purchase.getCategory(), total);
         }
-        return reportChartsItems;
+        ReportChart reportChart = new ReportChart(totalByCategory);
+
+        return reportChart;
     }
 }

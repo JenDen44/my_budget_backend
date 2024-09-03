@@ -23,9 +23,12 @@ public class ReportControllerTest {
     public void findTableReportItemsByDate() throws Exception {
         String startDate = "2014-09-01";
         String endDate = "2027-09-30";
-        String requestURL = "/reports/table/" + startDate + "/" + endDate;
+        String requestURL = "/reports/table";
 
-         mockMvc.perform(get(requestURL)).andExpect(status().isOk()).andDo(print());
+         mockMvc.perform(get(requestURL)
+                 .param("startDate",startDate)
+                 .param("endDate",endDate))
+                 .andExpect(status().isOk()).andDo(print());
     }
 
     @Test
@@ -33,8 +36,11 @@ public class ReportControllerTest {
     public void findChartReportItemsByDate() throws Exception {
         String startDate = "2014-09-01";
         String endDate = "2027-09-30";
-        String requestURL = "/reports/chart/" + startDate + "/" + endDate;
+        String requestURL = "/reports/chart";
 
-        mockMvc.perform(get(requestURL)).andExpect(status().isOk()).andDo(print());
+        mockMvc.perform(get(requestURL)
+                .param("startDate",startDate)
+                .param("endDate",endDate))
+                .andExpect(status().isOk()).andDo(print());
     }
 }
