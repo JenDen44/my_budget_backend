@@ -1,15 +1,13 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.user;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.AbstractDto;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@Builder
 public class UserDto extends AbstractDto {
 
     private String username;
@@ -19,5 +17,10 @@ public class UserDto extends AbstractDto {
         super(id);
         this.username = username;
         this.password = password;
+    }
+
+    public UserDto(User user) {
+        this.username = user.getUsername();
+        this.password = user.getPassword();
     }
 }

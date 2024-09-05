@@ -1,7 +1,7 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.entity;
 
 public enum Category {
-    FOOD("Food"), CLOTHE("Clothe"), EDUCATION("Education"), ENTERTAINMENT("Entertainment");
+    FOOD("FOOD"), CLOTHE("CLOTHE"), EDUCATION("EDUCATION"), ENTERTAINMENT("ENTERTAINMENT");
 
     private String code;
 
