@@ -1,9 +1,7 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.auth;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.token.*;
-import com.melnikov.bulish.my.budget.my_budget_backend.user.User;
-import com.melnikov.bulish.my.budget.my_budget_backend.user.UserNotFoundException;
-import com.melnikov.bulish.my.budget.my_budget_backend.user.UserRepository;
+import com.melnikov.bulish.my.budget.my_budget_backend.user.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +22,11 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final UserServiceImpl userService;
 
-    public AuthenticationResponse register(RegisterRequest request) {
+    public AuthenticationResponse register(AuthenticationRequest request) {
+        if (!userService.isUserNameUnique(request.getUsername())) throw new UserValidationException("The username is already in use");
+
         var user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -110,17 +111,16 @@ public class AuthenticationService {
                         .accessToken(newJwtToken)
                         .refreshToken(newRefreshToken)
                         .build();
+        } else {
+                throw new TokenValidationException("The token is not valid");
+        }
 
-            }else {
-                throw new RuntimeException("The token is not valid");
-            }
+        } else {
+            throw new TokenValidationException("The extracted userEmail from token is null");
+        }
 
-            }else {
-            throw new RuntimeException("The extracted userEmail from token is null");
-             }
-
-             }else {
-            throw new RuntimeException("Header doesn't contain correct data for token");
+        } else {
+            throw new TokenValidationException("Header doesn't contain correct data for token");
         }
     }
 }

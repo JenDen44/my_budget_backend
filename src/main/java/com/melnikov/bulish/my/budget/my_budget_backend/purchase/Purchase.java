@@ -6,7 +6,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,7 +20,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class Purchase extends AbstractEntity {
 
-    @NotBlank(message = "Category should be populated")
     private Category category;
 
     @Min(value = 1, message = "cost can't be negative or 0")

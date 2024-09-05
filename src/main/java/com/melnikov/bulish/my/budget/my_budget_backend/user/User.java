@@ -5,9 +5,8 @@ import com.melnikov.bulish.my.budget.my_budget_backend.token.Token;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,13 +25,11 @@ import java.util.List;
 public class User extends AbstractEntity implements UserDetails {
 
     @NotBlank(message = "username should be populated")
-    @Min(value = 7, message = "username can't be shorter 7 characters")
-    @Max(value = 14, message = "username can't be longer 14 characters")
+    @Size(min = 7, max = 18, message = "username size should be between 7 and 18")
     private String username;
 
     @NotBlank(message = "password should be populated")
-    @Min(value = 8, message = "password can't be shorter 8 characters")
-    @Max(value = 20, message = "password can't be longer 20 characters")
+    @Size(min = 8, message = "password must contain at least 8 symbols")
     private String password;
 
     @OneToMany(mappedBy = "user")
@@ -41,6 +38,10 @@ public class User extends AbstractEntity implements UserDetails {
     public User(String username, String password) {
         this.username = username;
         this.password = password;
+    }
+    public User(UserDto userDto) {
+        this.username = userDto.getUsername();
+        this.password = userDto.getPassword();
     }
 
     @Override

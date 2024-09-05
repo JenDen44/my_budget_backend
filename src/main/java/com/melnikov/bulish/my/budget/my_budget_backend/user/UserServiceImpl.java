@@ -1,25 +1,21 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.user;
 
-import com.melnikov.bulish.my.budget.my_budget_backend.token.JwtTokenService;
-import com.melnikov.bulish.my.budget.my_budget_backend.token.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepo;
-    private final UserMapper userMapper;
     @Autowired
-    public UserServiceImpl(UserRepository userRepo, UserMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepo) {
         this.userRepo = userRepo;
-        this.userMapper = userMapper;
     }
 
     @Override
@@ -27,23 +23,26 @@ public class UserServiceImpl implements UserService {
         User user = userRepo.findById(id)
                 .orElseThrow (() -> new UserNotFoundException("User with id " + id + " is not found in DB"));
 
-        return userMapper.toDto(user);
+        return new UserDto(user);
     }
 
     @Override
     public List<UserDto> findAllUsers() {
-        List<User> users = (List<User>) userRepo.findAll();
-        List<UserDto> userDtoList = users.stream().map(user -> userMapper.toDto(user)).toList();
+        List<User> users = userRepo.findAll();
+        if (users.isEmpty()) throw new UserNotFoundException("No one user was found in DB");
+
+        List<UserDto> userDtoList = users.stream().map(user -> new UserDto(user)).toList();
 
         return userDtoList;
     }
 
     @Override
     public UserDto saveUser(UserDto userDto) {
-        User userToDB = userMapper.toEntity(userDto);
-        User userSavedToDB = userRepo.save(userToDB);
 
-        return userMapper.toDto(userSavedToDB);
+        if (!isUserNameUnique(userDto.getUsername())) throw new UserValidationException("The username is already in use");
+        if (!isPasswordValid(userDto.getPassword())) throw new UserValidationException("The password is not strong enough");
+
+        return new UserDto(userRepo.save(new User(userDto)));
     }
 
     @Override
@@ -51,9 +50,13 @@ public class UserServiceImpl implements UserService {
         User user = userRepo.findById(id)
                 .orElseThrow (() -> new UserNotFoundException("User with id " + id + " is not found in DB"));
 
-        User updateUser = userRepo.save(userMapper.toEntity(userDto));
+        if (!isUserNameUnique(userDto.getUsername())) throw new UserValidationException("The username is already in use");
+        if (!isPasswordValid(userDto.getPassword())) throw new UserValidationException("The password is not strong enough");
 
-        return userMapper.toDto(updateUser);
+        user.setUsername(userDto.getUsername());
+        user.setPassword(userDto.getPassword());
+
+        return new UserDto(userRepo.save(user));
     }
 
     @Override
@@ -63,5 +66,19 @@ public class UserServiceImpl implements UserService {
 
         userRepo.deleteById(id);
 
+    }
+    public boolean isUserNameUnique(String userName) {
+
+       return userRepo.findByUsername(userName).isEmpty();
+
+    }
+
+    public boolean isPasswordValid(String password) {
+        String validation = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,20}$";
+
+        Pattern pattern = Pattern.compile(validation, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(password);
+
+        return matcher.matches();
     }
 }

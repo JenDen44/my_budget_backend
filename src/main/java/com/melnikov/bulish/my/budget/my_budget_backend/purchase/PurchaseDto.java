@@ -19,7 +19,7 @@ public class PurchaseDto extends AbstractDto {
     private Integer quantity;
     private Double totalCost;
 
-    @JsonFormat(pattern="y-M-d")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate purchaseDate;
 
     public PurchaseDto(Category category, Double cost, Integer quantity, LocalDate purchaseDate) {

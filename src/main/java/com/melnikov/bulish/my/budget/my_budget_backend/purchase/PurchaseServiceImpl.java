@@ -13,7 +13,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     private final PurchaseRepository purchaseRepo;
 
     @Autowired
-    public PurchaseServiceImpl(PurchaseRepository purchaseRepo, PurchaseMapper purchaseMapper) {
+    public PurchaseServiceImpl(PurchaseRepository purchaseRepo) {
         this.purchaseRepo = purchaseRepo;
     }
 
@@ -28,8 +28,9 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     public List<PurchaseDto> findAllPurchases() {
         List<Purchase> purchases =  purchaseRepo.findAll();
-        List<PurchaseDto> purchaseDtoList = purchases.stream().map(p ->
-                new PurchaseDto(p)).toList();
+        List<PurchaseDto> purchaseDtoList = purchases.stream().map(p -> new PurchaseDto(p)).toList();
+
+        if (purchaseDtoList.isEmpty()) throw new PurchaseNotFoundException("No one purchase was found in DB");
 
             return purchaseDtoList;
     }

@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.report;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Category;
 import lombok.*;
 
@@ -11,6 +12,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class ReportTable extends ReportItem {
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     LocalDate date;
     public ReportTable(LocalDate date, Map<Category,Double> purchases) {
         super(purchases);

@@ -2,6 +2,7 @@ package com.melnikov.bulish.my.budget.my_budget_backend.report;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Category;
 import com.melnikov.bulish.my.budget.my_budget_backend.purchase.Purchase;
+import com.melnikov.bulish.my.budget.my_budget_backend.purchase.PurchaseNotFoundException;
 import com.melnikov.bulish.my.budget.my_budget_backend.purchase.PurchaseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public  class ReportService {
         LocalDate endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
 
         List<Purchase> purchases = purchaseRepository.findPurchaseWithTimeBetween(startTime, endTime);
-        if (purchases.isEmpty()) throw new ReportItemNotFoundException("No purchases were found between "
+        if (purchases.isEmpty()) throw new PurchaseNotFoundException("No purchases were found between "
                 + startTime + " " + endDate);
 
         for (Purchase purchase : purchases) {
@@ -51,7 +52,7 @@ public  class ReportService {
         LocalDate endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
 
         List<Purchase> purchases = purchaseRepository.findPurchaseWithTimeBetween(startTime, endTime);
-        if (purchases.isEmpty()) throw new ReportItemNotFoundException("No purchases were found between "
+        if (purchases.isEmpty()) throw new PurchaseNotFoundException("No purchases were found between "
                 + startTime + " " + endDate);
 
         for (Purchase purchase : purchases) {

@@ -3,7 +3,6 @@ package com.melnikov.bulish.my.budget.my_budget_backend.token;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.melnikov.bulish.my.budget.my_budget_backend.auth.AuthenticationRequest;
 import com.melnikov.bulish.my.budget.my_budget_backend.auth.AuthenticationResponse;
-import com.melnikov.bulish.my.budget.my_budget_backend.auth.RegisterRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -35,7 +34,7 @@ public class TokenControllerTest {
     @Test
     public void register() throws Exception {
         String url = "/register";
-        RegisterRequest request = new RegisterRequest("Mikle","test0404");
+        AuthenticationRequest request = new AuthenticationRequest("Mikle","test0404");
 
         MvcResult result = mockMvc.perform(post(url).contentType("application/json")
                         .content(objectMapper.writeValueAsString(request))
