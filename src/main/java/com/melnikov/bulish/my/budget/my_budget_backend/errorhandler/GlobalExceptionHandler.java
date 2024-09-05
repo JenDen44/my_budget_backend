@@ -1,10 +1,10 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.errorhandler;
 
-import com.melnikov.bulish.my.budget.my_budget_backend.auth.TokenValidationException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -51,9 +51,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<ApiErrorValidation>(apiErrorValidation, new HttpHeaders(), apiErrorValidation.getCode());
     }
 
-    @ExceptionHandler(TokenValidationException.class)
-    public ResponseEntity<ApiErrorValidation> tokenExceptionHandler(TokenValidationException ex) {
-        final ApiErrorValidation apiErrorValidation = new ApiErrorValidation(ex.getLocalizedMessage());
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorValidation> methodArgumentExceptionHandler(MethodArgumentNotValidException ex) {
+        final List<ErrorField> errors = new ArrayList();
+        errors.add(new ErrorField(ex.getFieldError().getField(), ex.getFieldError().getDefaultMessage()));
+        final ApiErrorValidation apiErrorValidation = new ApiErrorValidation(errors);
 
         return new ResponseEntity<ApiErrorValidation>(apiErrorValidation, new HttpHeaders(), apiErrorValidation.getCode());
     }

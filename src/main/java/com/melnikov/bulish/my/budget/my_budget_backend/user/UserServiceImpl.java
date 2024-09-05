@@ -5,8 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 @Transactional
@@ -40,7 +38,6 @@ public class UserServiceImpl implements UserService {
     public UserDto saveUser(UserDto userDto) {
 
         if (!isUserNameUnique(userDto.getUsername())) throw new UserValidationException("The username is already in use");
-        if (!isPasswordValid(userDto.getPassword())) throw new UserValidationException("The password is not strong enough");
 
         return new UserDto(userRepo.save(new User(userDto)));
     }
@@ -51,7 +48,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow (() -> new UserNotFoundException("User with id " + id + " is not found in DB"));
 
         if (!isUserNameUnique(userDto.getUsername())) throw new UserValidationException("The username is already in use");
-        if (!isPasswordValid(userDto.getPassword())) throw new UserValidationException("The password is not strong enough");
 
         user.setUsername(userDto.getUsername());
         user.setPassword(userDto.getPassword());
@@ -71,14 +67,5 @@ public class UserServiceImpl implements UserService {
 
        return userRepo.findByUsername(userName).isEmpty();
 
-    }
-
-    public boolean isPasswordValid(String password) {
-        String validation = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,20}$";
-
-        Pattern pattern = Pattern.compile(validation, Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(password);
-
-        return matcher.matches();
     }
 }
