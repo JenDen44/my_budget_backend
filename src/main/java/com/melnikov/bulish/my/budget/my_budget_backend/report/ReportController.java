@@ -27,7 +27,7 @@ public class ReportController {
 
     @GetMapping("chart")
     public ResponseEntity<ReportChart> getChartReportDataByDatePeriod(@JsonFormat(pattern="y-M-d")@RequestParam("startDate") String startDate,
-                                                                            @JsonFormat(pattern="y-M-d") @RequestParam("endDate") String endDate) {
+                                                                      @JsonFormat(pattern="y-M-d") @RequestParam("endDate") String endDate) {
 
         return ResponseEntity.ok(reportService.getChartReportItemsByDate(startDate,endDate));
     }
