@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.purchase;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.utils.AppConstantsConfig;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,9 +21,12 @@ public class PurchaseController {
     }
 
     @GetMapping
-    public List<PurchaseDto> getAllPurchases() {
+    public List<PurchaseDto> getPurchasePage(@RequestParam(value = "pageNo", defaultValue = AppConstantsConfig.DEFAULT_PAGE_NUMBER, required = false) int pageNo,
+                                             @RequestParam(value = "pageSize", defaultValue = AppConstantsConfig.DEFAULT_PAGE_SIZE, required = false) int pageSize,
+                                             @RequestParam(value = "sortBy", defaultValue = AppConstantsConfig.DEFAULT_SORT_BY, required = false) String sortBy,
+                                             @RequestParam(value = "sortDir", defaultValue = AppConstantsConfig.DEFAULT_SORT_DIR, required = false) String sortDir) {
 
-        return purchaseService.findAllPurchases();
+             return purchaseService.getPurchasesPage(pageNo,pageSize,sortBy, sortDir);
     }
 
     @GetMapping("/{id}")
