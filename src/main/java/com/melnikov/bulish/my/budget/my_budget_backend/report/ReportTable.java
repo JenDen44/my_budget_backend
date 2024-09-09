@@ -13,7 +13,8 @@ import java.util.Map;
 public class ReportTable extends ReportItem {
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate date;
+    private LocalDate date;
+
     public ReportTable(LocalDate date, Map<Category,Double> purchases) {
         super(purchases);
         this.date = date;

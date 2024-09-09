@@ -63,7 +63,7 @@ public class PurchaseRepositoryTest {
 
     @Test
     public void findAllPurchases() {
-        List<Purchase> allPurchases = repo.findAll();
+        List<Purchase> allPurchases = (List<Purchase>) repo.findAll();
 
         assertThat(!allPurchases.isEmpty());
 

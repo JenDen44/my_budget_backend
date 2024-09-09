@@ -15,8 +15,9 @@ public interface PurchaseRepository extends CrudRepository<Purchase, Integer>, P
 
     @Query("SELECT NEW com.melnikov.bulish.my.budget.my_budget_backend.purchase.Purchase(p.category, p.cost, p.quantity,"
             + "  p.purchaseDate)"
-            + " FROM Purchase p WHERE p.purchaseDate BETWEEN ?1 AND ?2")
-    public List<Purchase> findPurchaseWithTimeBetween(LocalDate startTime, LocalDate endTime);
+            + " FROM Purchase p WHERE p.purchaseDate BETWEEN ?1 AND ?2 " +
+            "AND user.id = ?3")
+    public List<Purchase> findPurchaseWithTimeBetween(LocalDate startTime, LocalDate endTime, Integer userId);
 
     @Query("SELECT p FROM Purchase p WHERE p.user.id=?1")
     Page<Purchase> findByUserWithPagination(Integer userId, Pageable pageable);

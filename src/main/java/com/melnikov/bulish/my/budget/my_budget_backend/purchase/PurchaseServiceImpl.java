@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,6 +64,8 @@ public class PurchaseServiceImpl implements PurchaseService {
     public PurchaseDto savePurchase(PurchaseDto purchaseDto) {
         User currentUser = userService.getCurrentUser();
         Purchase purchase = new Purchase(purchaseDto);
+        LocalDate currentDate = LocalDate.now();
+        purchase.setPurchaseDate(currentDate);
         purchase.setUser(currentUser);
         Purchase purchaseSavedToDB = purchaseRepo.save(purchase);
 
