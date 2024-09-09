@@ -8,9 +8,13 @@ import java.util.Map;
 
 @Data
 @NoArgsConstructor
-public class ReportChart extends ReportItem {
+public class ReportChart {
 
-    public ReportChart(Map<Category, Double> purchasesByCategory) {
-        super(purchasesByCategory);
+    private Category category;
+    private Double total;
+
+    public ReportChart(Category category, Double total) {
+        this.category = category;
+        this.total = total;
     }
 }

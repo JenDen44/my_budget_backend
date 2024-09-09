@@ -9,14 +9,14 @@ import java.util.Map;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-public class ReportTable extends ReportItem {
+public class ReportTable {
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
+    private Map<Category, Double> purchasesByCategory;
 
     public ReportTable(LocalDate date, Map<Category,Double> purchases) {
-        super(purchases);
+        this.purchasesByCategory = purchases;
         this.date = date;
     }
 }

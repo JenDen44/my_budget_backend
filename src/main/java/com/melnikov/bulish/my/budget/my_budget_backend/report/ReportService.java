@@ -56,9 +56,10 @@ public  class ReportService {
         return reportTables;
     }
 
-    public ReportChart getChartReportItemsByDate(String startDate, String endDate) {
+    public List<ReportChart> getChartReportItemsByDate(String startDate, String endDate) {
         User currentUser = userService.getCurrentUser();
         Map<Category, Double> totalByCategory = new HashMap<>();
+        List<ReportChart> reportCharts = new ArrayList<>();
 
         LocalDate startTime = LocalDate.parse(startDate, DateTimeFormatter.ofPattern("y-M-d"));
         LocalDate endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
@@ -72,8 +73,11 @@ public  class ReportService {
             total+=purchase.getTotalCost();
             totalByCategory.put(purchase.getCategory(), total);
         }
-        ReportChart reportChart = new ReportChart(totalByCategory);
 
-        return reportChart;
+        for (Map.Entry<Category,Double> entry: totalByCategory.entrySet()) {
+            reportCharts.add(new ReportChart(entry.getKey(), entry.getValue()));
+        }
+
+            return reportCharts;
     }
 }
