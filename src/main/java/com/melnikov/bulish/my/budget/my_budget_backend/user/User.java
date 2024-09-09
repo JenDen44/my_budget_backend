@@ -1,6 +1,7 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.user;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.AbstractEntity;
+import com.melnikov.bulish.my.budget.my_budget_backend.purchase.Purchase;
 import com.melnikov.bulish.my.budget.my_budget_backend.token.Token;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
@@ -27,6 +28,9 @@ public class User extends AbstractEntity implements UserDetails {
 
     @OneToMany(mappedBy = "user")
     private List<Token> tokens;
+
+    @OneToMany(mappedBy = "user")
+    private List<Purchase> purchases;
 
     public User(String username, String password) {
         this.username = username;

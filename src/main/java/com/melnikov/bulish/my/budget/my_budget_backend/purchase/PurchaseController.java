@@ -26,7 +26,7 @@ public class PurchaseController {
                                              @RequestParam(value = "sortBy", defaultValue = AppConstantsConfig.DEFAULT_SORT_BY, required = false) String sortBy,
                                              @RequestParam(value = "sortDir", defaultValue = AppConstantsConfig.DEFAULT_SORT_DIR, required = false) String sortDir) {
 
-             return purchaseService.getPurchasesPage(pageNo,pageSize,sortBy, sortDir);
+             return purchaseService.getPurchasesForCurrentUser(pageNo,pageSize,sortBy, sortDir);
     }
 
     @GetMapping("/{id}")

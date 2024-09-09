@@ -18,6 +18,7 @@ public class PurchaseDto extends AbstractDto {
     private Double cost;
     private Integer quantity;
     private Double totalCost;
+    private Integer userId;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate purchaseDate;
@@ -37,5 +38,6 @@ public class PurchaseDto extends AbstractDto {
         this.quantity = purchase.getQuantity();
         this.totalCost = cost * quantity;
         this.purchaseDate = purchase.getPurchaseDate();
+        this.userId = purchase.getUser().getId();
     }
 }

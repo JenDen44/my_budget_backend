@@ -2,8 +2,8 @@ package com.melnikov.bulish.my.budget.my_budget_backend.purchase;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.AbstractEntity;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Category;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.melnikov.bulish.my.budget.my_budget_backend.user.User;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -31,6 +31,10 @@ public class Purchase extends AbstractEntity {
     private Integer quantity;
     private Double totalCost;
     private LocalDate purchaseDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     public Purchase(Category category, Double cost, Integer quantity, LocalDate purchaseDate) {
         this.category = category;

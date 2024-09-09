@@ -1,5 +1,7 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.purchase;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.user.User;
+import com.melnikov.bulish.my.budget.my_budget_backend.user.UserServiceImpl;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,10 +18,12 @@ import java.util.stream.Collectors;
 public class PurchaseServiceImpl implements PurchaseService {
 
     private final PurchaseRepository purchaseRepo;
+    private final UserServiceImpl userService;
 
     @Autowired
-    public PurchaseServiceImpl(PurchaseRepository purchaseRepo) {
+    public PurchaseServiceImpl(PurchaseRepository purchaseRepo, UserServiceImpl userService) {
         this.purchaseRepo = purchaseRepo;
+        this.userService = userService;
     }
 
     @Override
@@ -40,22 +44,27 @@ public class PurchaseServiceImpl implements PurchaseService {
             return purchaseDtoList;
     }
 
-    public List<PurchaseDto> getPurchasesPage(int pageNo, int pageSize, String sortBy, String sortDir) {
+    public List<PurchaseDto> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir) {
 
+        User currentUser = userService.getCurrentUser();
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())? Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
         Pageable pg = PageRequest.of(pageNo , pageSize , sort);
-        Page<Purchase> pagePurchases = purchaseRepo.findAll(pg);
-        if (pagePurchases.isEmpty()) throw new PurchaseNotFoundException("No one purchases was found in DB");
+         Page<Purchase> purchasesByCurrentUser = purchaseRepo.findByUserWithPagination(currentUser.getId(), pg);
 
-        List<PurchaseDto> purchases = pagePurchases
+        if (purchasesByCurrentUser.isEmpty()) throw new PurchaseNotFoundException("No one purchases was found in DB");
+
+        List<PurchaseDto> purchases = purchasesByCurrentUser
                 .getContent().stream().map(p -> new PurchaseDto(p)).collect(Collectors.toList());
 
             return purchases;
     }
 
     @Override
-    public PurchaseDto savePurchase(PurchaseDto purchase) {
-        Purchase purchaseSavedToDB = purchaseRepo.save(new Purchase(purchase));
+    public PurchaseDto savePurchase(PurchaseDto purchaseDto) {
+        User currentUser = userService.getCurrentUser();
+        Purchase purchase = new Purchase(purchaseDto);
+        purchase.setUser(currentUser);
+        Purchase purchaseSavedToDB = purchaseRepo.save(purchase);
 
             return new PurchaseDto(purchaseSavedToDB);
     }
