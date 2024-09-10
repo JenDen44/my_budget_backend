@@ -64,8 +64,6 @@ public class PurchaseServiceImpl implements PurchaseService {
     public PurchaseDto savePurchase(PurchaseDto purchaseDto) {
         User currentUser = userService.getCurrentUser();
         Purchase purchase = new Purchase(purchaseDto);
-        LocalDate currentDate = LocalDate.now();
-        purchase.setPurchaseDate(currentDate);
         purchase.setUser(currentUser);
         Purchase purchaseSavedToDB = purchaseRepo.save(purchase);
 

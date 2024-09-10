@@ -3,6 +3,7 @@ package com.melnikov.bulish.my.budget.my_budget_backend.purchase;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.AbstractDto;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Category;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,7 @@ public class PurchaseDto extends AbstractDto {
     private Integer userId;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
+    @NotNull(message = "purchaseDate should must be filled")
     private LocalDate purchaseDate;
 
     public PurchaseDto(Category category, Double cost, Integer quantity, LocalDate purchaseDate) {
