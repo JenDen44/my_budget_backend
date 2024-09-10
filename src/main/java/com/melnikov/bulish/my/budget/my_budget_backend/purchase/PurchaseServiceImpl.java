@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,24 +37,28 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     @Override
     public List<PurchaseDto> findAllPurchases() {
-        List<Purchase> purchases = (List<Purchase>) purchaseRepo.findAll();
-        List<PurchaseDto> purchaseDtoList = purchases.stream().map(p -> new PurchaseDto(p)).toList();
+        List<PurchaseDto> purchases = new ArrayList<>();
+        List<Purchase> purchasesFromDB = (List<Purchase>) purchaseRepo.findAll();
+        purchases = purchasesFromDB.stream().map(p -> new PurchaseDto(p)).toList();
 
-        if (purchaseDtoList.isEmpty()) throw new PurchaseNotFoundException("No one purchase was found in DB");
+       /* if (purchases.isEmpty()) throw new PurchaseNotFoundException("No one purchase was found in DB");*/
+        //TODO add logging instead of exception
 
-            return purchaseDtoList;
+            return purchases;
     }
 
     public List<PurchaseDto> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir) {
+        List<PurchaseDto> purchases = new ArrayList<>();
 
         User currentUser = userService.getCurrentUser();
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())? Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
         Pageable pg = PageRequest.of(pageNo , pageSize , sort);
-         Page<Purchase> purchasesByCurrentUser = purchaseRepo.findByUserWithPagination(currentUser.getId(), pg);
+        Page<Purchase> purchasesByCurrentUser = purchaseRepo.findByUserWithPagination(currentUser.getId(), pg);
 
-        if (purchasesByCurrentUser.isEmpty()) throw new PurchaseNotFoundException("No one purchases was found in DB");
+        if (purchasesByCurrentUser.isEmpty()) return purchases;
+        //TODO добавить логирование вместо ошибки
 
-        List<PurchaseDto> purchases = purchasesByCurrentUser
+        purchases = purchasesByCurrentUser
                 .getContent().stream().map(p -> new PurchaseDto(p)).collect(Collectors.toList());
 
             return purchases;

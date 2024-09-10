@@ -33,8 +33,9 @@ public  class ReportService {
         LocalDate endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
 
         List<Purchase> purchases = purchaseRepository.findPurchaseWithTimeBetween(startTime, endTime, currentUser.getId());
-        if (purchases.isEmpty()) throw new PurchaseNotFoundException("No purchases were found between "
-                + startTime + " " + endDate);
+
+        if (purchases.isEmpty()) return reportTables;
+        //TODO add logging instead of error
 
         for (Purchase purchase : purchases) {
             Map<Category,Double> mapCategory = map.getOrDefault(purchase.getPurchaseDate(), new HashMap<>());
@@ -53,7 +54,8 @@ public  class ReportService {
                 return o1.getDate().compareTo(o2.getDate());
             }
         });
-        return reportTables;
+
+             return reportTables;
     }
 
     public List<ReportChart> getChartReportItemsByDate(String startDate, String endDate) {
@@ -65,8 +67,9 @@ public  class ReportService {
         LocalDate endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
 
         List<Purchase> purchases = purchaseRepository.findPurchaseWithTimeBetween(startTime, endTime, currentUser.getId());
-        if (purchases.isEmpty()) throw new PurchaseNotFoundException("No purchases were found between "
-                + startTime + " " + endDate);
+        if (purchases.isEmpty()) return reportCharts;
+
+        //TODO add logging instead of error
 
         for (Purchase purchase : purchases) {
             double total = totalByCategory.getOrDefault(purchase.getCategory(),0.0);
