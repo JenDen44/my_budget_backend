@@ -15,8 +15,8 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "PurchaseDto Model Information")
-public class PurchaseDto extends AbstractDto {
+@Schema(description = "PurchaseResponse Model Information")
+public class PurchaseResponse extends AbstractDto {
 
     @Schema(description = "Category can be chosen from : CLOTHE, EDUCATION, FOOD, ENTERTAINMENT", example = "CLOTHE")
     private Category category;
@@ -31,10 +31,10 @@ public class PurchaseDto extends AbstractDto {
 
     @Schema(description = "Purchase Date should be filled in yyyy-MM-dd format", example = "2019-09-09")
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @NotNull(message = "purchaseDate should must be filled")
+    @NotNull(message = "purchaseDate  must be filled")
     private LocalDate purchaseDate;
 
-    public PurchaseDto(Category category, Double cost, Integer quantity, LocalDate purchaseDate) {
+    public PurchaseResponse(Category category, Double cost, Integer quantity, LocalDate purchaseDate) {
         this.category = category;
         this.cost = cost;
         this.quantity = quantity;
@@ -42,7 +42,7 @@ public class PurchaseDto extends AbstractDto {
         this.purchaseDate = purchaseDate;
     }
 
-    public PurchaseDto(Purchase purchase) {
+    public PurchaseResponse(Purchase purchase) {
         this.id = purchase.getId();
         this.category = purchase.getCategory();
         this.cost = purchase.getCost();

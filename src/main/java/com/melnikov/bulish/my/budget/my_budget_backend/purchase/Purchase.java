@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ import java.time.LocalDate;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@Builder
 public class Purchase extends AbstractEntity {
 
     private Category category;
@@ -44,12 +46,21 @@ public class Purchase extends AbstractEntity {
         this.purchaseDate = purchaseDate;
     }
 
-    public Purchase(PurchaseDto purchaseDto) {
-        this.id = purchaseDto.getId();
-        this.category = purchaseDto.getCategory();
-        this.cost = purchaseDto.getCost();
-        this.quantity = purchaseDto.getQuantity();
+    public Purchase(PurchaseResponse purchaseResponse) {
+        this.id = purchaseResponse.getId();
+        this.category = purchaseResponse.getCategory();
+        this.cost = purchaseResponse.getCost();
+        this.quantity = purchaseResponse.getQuantity();
         this.totalCost = cost * quantity;
-        this.purchaseDate = purchaseDto.getPurchaseDate();
+        this.purchaseDate = purchaseResponse.getPurchaseDate();
+    }
+
+    public Purchase(Category category, Double cost, Integer quantity, Double totalCost, LocalDate purchaseDate, User user) {
+        this.category = category;
+        this.cost = cost;
+        this.quantity = quantity;
+        this.totalCost = totalCost;
+        this.purchaseDate = purchaseDate;
+        this.user = user;
     }
 }

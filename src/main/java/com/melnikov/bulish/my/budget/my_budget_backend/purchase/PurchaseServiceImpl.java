@@ -28,18 +28,18 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
-    public PurchaseDto findPurchaseById(Integer id) {
+    public PurchaseResponse findPurchaseById(Integer id) {
         Purchase purchase = purchaseRepo.findById(id)
                 .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
 
-            return new PurchaseDto(purchase);
+            return new PurchaseResponse(purchase);
     }
 
     @Override
-    public List<PurchaseDto> findAllPurchases() {
-        List<PurchaseDto> purchases = new ArrayList<>();
+    public List<PurchaseResponse> findAllPurchases() {
+        List<PurchaseResponse> purchases = new ArrayList<>();
         List<Purchase> purchasesFromDB = (List<Purchase>) purchaseRepo.findAll();
-        purchases = purchasesFromDB.stream().map(p -> new PurchaseDto(p)).toList();
+        purchases = purchasesFromDB.stream().map(p -> new PurchaseResponse(p)).toList();
 
        /* if (purchases.isEmpty()) throw new PurchaseNotFoundException("No one purchase was found in DB");*/
         //TODO add logging instead of exception
@@ -47,8 +47,8 @@ public class PurchaseServiceImpl implements PurchaseService {
             return purchases;
     }
 
-    public List<PurchaseDto> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir) {
-        List<PurchaseDto> purchases = new ArrayList<>();
+    public List<PurchaseResponse> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir) {
+        List<PurchaseResponse> purchases = new ArrayList<>();
 
         User currentUser = userService.getCurrentUser();
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())? Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
@@ -59,23 +59,31 @@ public class PurchaseServiceImpl implements PurchaseService {
         //TODO добавить логирование вместо ошибки
 
         purchases = purchasesByCurrentUser
-                .getContent().stream().map(p -> new PurchaseDto(p)).collect(Collectors.toList());
+                .getContent().stream().map(p -> new PurchaseResponse(p)).collect(Collectors.toList());
 
             return purchases;
     }
 
     @Override
-    public PurchaseDto savePurchase(PurchaseDto purchaseDto) {
+    public PurchaseResponse savePurchase(PurchaseRequest purchaseRequest) {
         User currentUser = userService.getCurrentUser();
-        Purchase purchase = new Purchase(purchaseDto);
+
+        var purchase = Purchase.builder()
+                        .purchaseDate(purchaseRequest.getPurchaseDate())
+                        .cost(purchaseRequest.getCost())
+                        .quantity(purchaseRequest.getQuantity())
+                        .category(purchaseRequest.getCategory())
+                        .totalCost(purchaseRequest.getCost() * purchaseRequest.getQuantity())
+                        .build();
+
         purchase.setUser(currentUser);
         Purchase purchaseSavedToDB = purchaseRepo.save(purchase);
 
-            return new PurchaseDto(purchaseSavedToDB);
+            return new PurchaseResponse(purchaseSavedToDB);
     }
 
     @Override
-    public PurchaseDto updatePurchase(PurchaseDto purchase, Integer id) {
+    public PurchaseResponse updatePurchase(PurchaseResponse purchase, Integer id) {
         Purchase purchaseFromDB = purchaseRepo.findById(id)
                 .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
 
@@ -84,7 +92,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         purchaseFromDB.setCategory(purchase.getCategory());
         purchaseFromDB.setQuantity(purchase.getQuantity());
 
-            return new PurchaseDto(purchaseRepo.save(purchaseFromDB));
+            return new PurchaseResponse(purchaseRepo.save(purchaseFromDB));
     }
 
     @Override

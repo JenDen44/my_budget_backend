@@ -45,10 +45,10 @@ public class PurchaseController {
             }
     )
     @GetMapping
-    public List<PurchaseDto> getPurchasePage(@RequestParam(value = "pageNo", defaultValue = AppConstantsConfig.DEFAULT_PAGE_NUMBER, required = false) int pageNo,
-                                             @RequestParam(value = "pageSize", defaultValue = AppConstantsConfig.DEFAULT_PAGE_SIZE, required = false) int pageSize,
-                                             @RequestParam(value = "sortBy", defaultValue = AppConstantsConfig.DEFAULT_SORT_BY, required = false) String sortBy,
-                                             @RequestParam(value = "sortDir", defaultValue = AppConstantsConfig.DEFAULT_SORT_DIR, required = false) String sortDir) {
+    public List<PurchaseResponse> getPurchasePage(@RequestParam(value = "pageNo", defaultValue = AppConstantsConfig.DEFAULT_PAGE_NUMBER, required = false) int pageNo,
+                                                  @RequestParam(value = "pageSize", defaultValue = AppConstantsConfig.DEFAULT_PAGE_SIZE, required = false) int pageSize,
+                                                  @RequestParam(value = "sortBy", defaultValue = AppConstantsConfig.DEFAULT_SORT_BY, required = false) String sortBy,
+                                                  @RequestParam(value = "sortDir", defaultValue = AppConstantsConfig.DEFAULT_SORT_DIR, required = false) String sortDir) {
 
              return purchaseService.getPurchasesForCurrentUser(pageNo,pageSize,sortBy, sortDir);
     }
@@ -79,10 +79,10 @@ public class PurchaseController {
             }
     )
     @GetMapping("/{id}")
-    public ResponseEntity<PurchaseDto> getPurchase(@PathVariable Integer id) {
-        PurchaseDto purchaseDto = purchaseService.findPurchaseById(id);
+    public ResponseEntity<PurchaseResponse> getPurchase(@PathVariable Integer id) {
+        PurchaseResponse purchaseResponse = purchaseService.findPurchaseById(id);
 
-            return ResponseEntity.ok(purchaseDto);
+            return ResponseEntity.ok(purchaseResponse);
     }
     @Operation(
             description = "Endpoint for purchase creation",
@@ -105,10 +105,10 @@ public class PurchaseController {
             }
     )
     @PostMapping
-    public ResponseEntity<PurchaseDto> createPurchase(@Valid @RequestBody PurchaseDto purchaseDto) {
+    public ResponseEntity<PurchaseResponse> createPurchase(@Valid @RequestBody PurchaseRequest purchaseRequest) {
         System.out.println("createPurchase method is called");
 
-           return ResponseEntity.ok(purchaseService.savePurchase(purchaseDto));
+           return ResponseEntity.ok(purchaseService.savePurchase(purchaseRequest));
     }
 
     @Operation(
@@ -137,9 +137,9 @@ public class PurchaseController {
             }
     )
     @PutMapping("/{id}")
-    public ResponseEntity<PurchaseDto> updatePurchase(@Valid @RequestBody PurchaseDto purchaseDto,
-                                                @PathVariable Integer id) {
-          return ResponseEntity.ok(purchaseService.updatePurchase(purchaseDto, id));
+    public ResponseEntity<PurchaseResponse> updatePurchase(@Valid @RequestBody PurchaseResponse purchaseResponse,
+                                                           @PathVariable Integer id) {
+          return ResponseEntity.ok(purchaseService.updatePurchase(purchaseResponse, id));
     }
 
     @Operation(
