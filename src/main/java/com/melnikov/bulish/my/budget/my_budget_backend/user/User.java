@@ -26,9 +26,11 @@ public class User extends AbstractEntity implements UserDetails {
     private String username;
     private String password;
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "user")
     private List<Token> tokens;
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "user")
     private List<Purchase> purchases;
 

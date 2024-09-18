@@ -3,6 +3,7 @@ package com.melnikov.bulish.my.budget.my_budget_backend.purchase;
 import com.melnikov.bulish.my.budget.my_budget_backend.user.User;
 import com.melnikov.bulish.my.budget.my_budget_backend.user.UserServiceImpl;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 public class PurchaseServiceImpl implements PurchaseService {
@@ -28,45 +30,54 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
-    public PurchaseResponse findPurchaseById(Integer id) {
+    public PurchaseDto findPurchaseById(Integer id) {
         Purchase purchase = purchaseRepo.findById(id)
                 .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
 
-            return new PurchaseResponse(purchase);
+            return new PurchaseDto(purchase);
     }
 
     @Override
-    public List<PurchaseResponse> findAllPurchases() {
-        List<PurchaseResponse> purchases = new ArrayList<>();
+    public List<PurchaseDto> findAllPurchases() {
+        List<PurchaseDto> purchases = new ArrayList<>();
         List<Purchase> purchasesFromDB = (List<Purchase>) purchaseRepo.findAll();
-        purchases = purchasesFromDB.stream().map(p -> new PurchaseResponse(p)).toList();
 
-       /* if (purchases.isEmpty()) throw new PurchaseNotFoundException("No one purchase was found in DB");*/
-        //TODO add logging instead of exception
+        log.debug("PurchaseServiceImpl.findAllPurchases() purchases from DB is empty ? {} ", purchasesFromDB.isEmpty());
+        log.debug("{}", purchasesFromDB);
+
+        purchases = purchasesFromDB.stream().map(p -> new PurchaseDto(p)).toList();
 
             return purchases;
     }
 
-    public List<PurchaseResponse> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir) {
-        List<PurchaseResponse> purchases = new ArrayList<>();
+    public List<PurchaseDto> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir) {
+        log.debug("PurchaseServiceImpl.getPurchasesForCurrentUser() pageNo {}, pageSize {}, sortBy {}, " +
+                        "sortDir {} ", pageNo, pageSize, sortBy, sortDir);
+
+        List<PurchaseDto> purchases = new ArrayList<>();
 
         User currentUser = userService.getCurrentUser();
+        log.debug("Current user {} ", currentUser);
+
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())? Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
         Pageable pg = PageRequest.of(pageNo , pageSize , sort);
         Page<Purchase> purchasesByCurrentUser = purchaseRepo.findByUserWithPagination(currentUser.getId(), pg);
 
-        if (purchasesByCurrentUser.isEmpty()) return purchases;
-        //TODO добавить логирование вместо ошибки
+        log.debug("purchases list from DB is empty ? {} ", purchasesByCurrentUser.isEmpty());
+        log.debug("{}", purchasesByCurrentUser.getContent());
 
         purchases = purchasesByCurrentUser
-                .getContent().stream().map(p -> new PurchaseResponse(p)).collect(Collectors.toList());
+                .getContent().stream().map(p -> new PurchaseDto(p)).collect(Collectors.toList());
 
             return purchases;
     }
 
     @Override
-    public PurchaseResponse savePurchase(PurchaseRequest purchaseRequest) {
+    public PurchaseDto savePurchase(PurchaseRequest purchaseRequest) {
+        log.debug("PurchaseServiceImpl.savePurchase() is started");
+
         User currentUser = userService.getCurrentUser();
+        log.debug("current user {} ", currentUser);
 
         var purchase = Purchase.builder()
                         .purchaseDate(purchaseRequest.getPurchaseDate())
@@ -78,29 +89,37 @@ public class PurchaseServiceImpl implements PurchaseService {
 
         purchase.setUser(currentUser);
         Purchase purchaseSavedToDB = purchaseRepo.save(purchase);
+        log.debug("created purchase {} ", purchaseSavedToDB);
 
-            return new PurchaseResponse(purchaseSavedToDB);
+            return new PurchaseDto(purchaseSavedToDB);
     }
 
     @Override
-    public PurchaseResponse updatePurchase(PurchaseResponse purchase, Integer id) {
+    public PurchaseDto updatePurchase(PurchaseDto purchase, Integer id) {
+        log.debug("PurchaseServiceImpl.updatePurchase() is started");
+        log.debug("request {}, id {} ", purchase, id);
+
         Purchase purchaseFromDB = purchaseRepo.findById(id)
                 .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
+        log.debug("before update {} ", purchaseFromDB);
 
         purchaseFromDB.setPurchaseDate(purchase.getPurchaseDate());
         purchaseFromDB.setCost(purchase.getCost());
         purchaseFromDB.setCategory(purchase.getCategory());
         purchaseFromDB.setQuantity(purchase.getQuantity());
+        log.debug("after update {} ", purchaseFromDB);
 
-            return new PurchaseResponse(purchaseRepo.save(purchaseFromDB));
+            return new PurchaseDto(purchaseRepo.save(purchaseFromDB));
     }
 
     @Override
     public void deletePurchase(Integer id) {
+        log.debug("PurchaseServiceImpl.deletePurchase() is started");
+        log.debug("Purchase to be deleted {} ", id);
+
         Purchase purchaseFromDB = purchaseRepo.findById(id)
                 .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
 
         purchaseRepo.deleteById(id);
-
     }
 }

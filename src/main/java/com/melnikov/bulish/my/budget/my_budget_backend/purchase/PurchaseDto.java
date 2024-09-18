@@ -16,7 +16,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "PurchaseResponse Model Information")
-public class PurchaseResponse extends AbstractDto {
+public class PurchaseDto extends AbstractDto {
 
     @Schema(description = "Category can be chosen from : CLOTHE, EDUCATION, FOOD, ENTERTAINMENT", example = "CLOTHE")
     private Category category;
@@ -34,7 +34,7 @@ public class PurchaseResponse extends AbstractDto {
     @NotNull(message = "purchaseDate  must be filled")
     private LocalDate purchaseDate;
 
-    public PurchaseResponse(Category category, Double cost, Integer quantity, LocalDate purchaseDate) {
+    public PurchaseDto(Category category, Double cost, Integer quantity, LocalDate purchaseDate) {
         this.category = category;
         this.cost = cost;
         this.quantity = quantity;
@@ -42,7 +42,7 @@ public class PurchaseResponse extends AbstractDto {
         this.purchaseDate = purchaseDate;
     }
 
-    public PurchaseResponse(Purchase purchase) {
+    public PurchaseDto(Purchase purchase) {
         this.id = purchase.getId();
         this.category = purchase.getCategory();
         this.cost = purchase.getCost();

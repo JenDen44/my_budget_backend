@@ -45,7 +45,7 @@ public class PurchaseController {
             }
     )
     @GetMapping
-    public List<PurchaseResponse> getPurchasePage(@RequestParam(value = "pageNo", defaultValue = AppConstantsConfig.DEFAULT_PAGE_NUMBER, required = false) int pageNo,
+    public List<PurchaseDto> getPurchasePage(@RequestParam(value = "pageNo", defaultValue = AppConstantsConfig.DEFAULT_PAGE_NUMBER, required = false) int pageNo,
                                                   @RequestParam(value = "pageSize", defaultValue = AppConstantsConfig.DEFAULT_PAGE_SIZE, required = false) int pageSize,
                                                   @RequestParam(value = "sortBy", defaultValue = AppConstantsConfig.DEFAULT_SORT_BY, required = false) String sortBy,
                                                   @RequestParam(value = "sortDir", defaultValue = AppConstantsConfig.DEFAULT_SORT_DIR, required = false) String sortDir) {
@@ -79,10 +79,9 @@ public class PurchaseController {
             }
     )
     @GetMapping("/{id}")
-    public ResponseEntity<PurchaseResponse> getPurchase(@PathVariable Integer id) {
-        PurchaseResponse purchaseResponse = purchaseService.findPurchaseById(id);
+    public ResponseEntity<PurchaseDto> getPurchase(@PathVariable Integer id) {
 
-            return ResponseEntity.ok(purchaseResponse);
+            return ResponseEntity.ok( purchaseService.findPurchaseById(id));
     }
     @Operation(
             description = "Endpoint for purchase creation",
@@ -105,7 +104,7 @@ public class PurchaseController {
             }
     )
     @PostMapping
-    public ResponseEntity<PurchaseResponse> createPurchase(@Valid @RequestBody PurchaseRequest purchaseRequest) {
+    public ResponseEntity<PurchaseDto> createPurchase(@Valid @RequestBody PurchaseRequest purchaseRequest) {
         System.out.println("createPurchase method is called");
 
            return ResponseEntity.ok(purchaseService.savePurchase(purchaseRequest));
@@ -137,9 +136,9 @@ public class PurchaseController {
             }
     )
     @PutMapping("/{id}")
-    public ResponseEntity<PurchaseResponse> updatePurchase(@Valid @RequestBody PurchaseResponse purchaseResponse,
+    public ResponseEntity<PurchaseDto> updatePurchase(@Valid @RequestBody PurchaseDto request,
                                                            @PathVariable Integer id) {
-          return ResponseEntity.ok(purchaseService.updatePurchase(purchaseResponse, id));
+          return ResponseEntity.ok(purchaseService.updatePurchase(request, id));
     }
 
     @Operation(

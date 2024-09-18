@@ -1,6 +1,7 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.user;
 
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
@@ -21,8 +23,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto findUserById(Integer id) {
+        log.debug("UserServiceImpl.findUserById() is started with parameters {} ", id);
+
         User user = userRepo.findById(id)
                 .orElseThrow (() -> new UserNotFoundException("User with id " + id + " is not found in DB"));
+        log.debug("User from db {} ", user);
 
         return new UserDto(user);
     }

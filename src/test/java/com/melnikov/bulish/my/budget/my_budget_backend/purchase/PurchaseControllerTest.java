@@ -56,7 +56,7 @@ public class PurchaseControllerTest {
     public void createPurchase() throws JsonProcessingException, Exception {
             String url = "/purchases";
             LocalDate today = LocalDate.now();
-            PurchaseResponse purchaseResponse = new PurchaseResponse(Category.CLOTHE, 123.80, 2, today);
+            PurchaseDto purchaseResponse = new PurchaseDto(Category.CLOTHE, 123.80, 2, today);
 
             MvcResult result = mockMvc.perform(post(url).contentType("application/json")
                             .content(objectMapper.writeValueAsString(purchaseResponse))
@@ -80,7 +80,7 @@ public class PurchaseControllerTest {
         String url = "/purchases/" + purchaseId;
         LocalDate today = LocalDate.now();
 
-        PurchaseResponse purchaseResponse = new PurchaseResponse(Category.FOOD, 123.80, 2, today);
+        PurchaseDto purchaseResponse = new PurchaseDto(Category.FOOD, 123.80, 2, today);
 
         MvcResult result = mockMvc.perform(put(url).contentType("application/json")
                         .content(objectMapper.writeValueAsString(purchaseResponse))

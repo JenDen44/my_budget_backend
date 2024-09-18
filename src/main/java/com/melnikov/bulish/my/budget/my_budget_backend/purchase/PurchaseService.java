@@ -7,13 +7,13 @@ import java.util.List;
 @Service
 public interface PurchaseService {
 
-    public PurchaseResponse findPurchaseById(Integer id);
+    public PurchaseDto findPurchaseById(Integer id);
 
-    public List<PurchaseResponse> findAllPurchases();
+    public List<PurchaseDto> findAllPurchases();
 
-    public PurchaseResponse savePurchase(PurchaseRequest purchase);
+    public PurchaseDto savePurchase(PurchaseRequest purchase);
 
-    public PurchaseResponse updatePurchase(PurchaseResponse purchase, Integer id);
+    public PurchaseDto updatePurchase(PurchaseDto purchase, Integer id);
 
     public void deletePurchase(Integer id);
 }

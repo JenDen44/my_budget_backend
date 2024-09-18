@@ -7,10 +7,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -34,6 +31,7 @@ public class Purchase extends AbstractEntity {
     private Double totalCost;
     private LocalDate purchaseDate;
 
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
@@ -46,7 +44,7 @@ public class Purchase extends AbstractEntity {
         this.purchaseDate = purchaseDate;
     }
 
-    public Purchase(PurchaseResponse purchaseResponse) {
+    public Purchase(PurchaseDto purchaseResponse) {
         this.id = purchaseResponse.getId();
         this.category = purchaseResponse.getCategory();
         this.cost = purchaseResponse.getCost();
