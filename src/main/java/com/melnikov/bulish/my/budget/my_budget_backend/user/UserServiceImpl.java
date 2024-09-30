@@ -49,4 +49,10 @@ public class UserServiceImpl implements UserService {
 
          return currentUser.orElseThrow(() -> new UserNotFoundException("No one Authenticated user is returned"));
     }
+
+    public User findByUserName(String username) {
+       Optional<User> user = userRepo.findByUsername(username);
+
+        return user.orElseThrow(() -> new UserNotFoundException("No one user was found"));
+    }
 }

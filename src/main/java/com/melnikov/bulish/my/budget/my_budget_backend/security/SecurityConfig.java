@@ -28,7 +28,8 @@ public class SecurityConfig {
             "/configuration/security",
             "/v3/api-docs/**",
             "/v2/api-docs",
-            "/v3/api-docs"};
+            "/v3/api-docs",
+            "/ws/**"};
 
     private final JwtTokenFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;

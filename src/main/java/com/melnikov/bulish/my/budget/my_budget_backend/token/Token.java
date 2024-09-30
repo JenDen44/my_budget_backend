@@ -3,10 +3,7 @@ package com.melnikov.bulish.my.budget.my_budget_backend.token;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.AbstractEntity;
 import com.melnikov.bulish.my.budget.my_budget_backend.user.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.Instant;
 

@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.purchase;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.notification.*;
 import com.melnikov.bulish.my.budget.my_budget_backend.user.User;
 import com.melnikov.bulish.my.budget.my_budget_backend.user.UserServiceImpl;
 import jakarta.transaction.Transactional;
@@ -22,11 +23,13 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     private final PurchaseRepository purchaseRepo;
     private final UserServiceImpl userService;
+    private final PurchaseNotificationService notificationService;
 
     @Autowired
-    public PurchaseServiceImpl(PurchaseRepository purchaseRepo, UserServiceImpl userService) {
+    public PurchaseServiceImpl(PurchaseRepository purchaseRepo, UserServiceImpl userService, PurchaseNotificationService notificationService) {
         this.purchaseRepo = purchaseRepo;
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -90,14 +93,18 @@ public class PurchaseServiceImpl implements PurchaseService {
         purchase.setUser(currentUser);
         Purchase purchaseSavedToDB = purchaseRepo.save(purchase);
         log.debug("created purchase {} ", purchaseSavedToDB);
+        PurchaseDto purchaseDto = new PurchaseDto(purchaseSavedToDB);
+        notificationService.sendNotificationForCreate(purchaseDto,currentUser.getId());
 
-            return new PurchaseDto(purchaseSavedToDB);
+
+            return purchaseDto;
     }
 
     @Override
     public PurchaseDto updatePurchase(PurchaseDto purchase, Integer id) {
         log.debug("PurchaseServiceImpl.updatePurchase() is started");
         log.debug("request {}, id {} ", purchase, id);
+        User currentUser = userService.getCurrentUser();
 
         Purchase purchaseFromDB = purchaseRepo.findById(id)
                 .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
@@ -108,17 +115,22 @@ public class PurchaseServiceImpl implements PurchaseService {
         purchaseFromDB.setCategory(purchase.getCategory());
         purchaseFromDB.setQuantity(purchase.getQuantity());
         log.debug("after update {} ", purchaseFromDB);
+        purchaseRepo.save(purchaseFromDB);
+        PurchaseDto purchaseDto = new PurchaseDto(purchaseFromDB);
+        notificationService.sendNotificationForUpdate(purchaseDto, currentUser.getId());
 
-            return new PurchaseDto(purchaseRepo.save(purchaseFromDB));
+            return purchaseDto;
     }
 
     @Override
     public void deletePurchase(Integer id) {
         log.debug("PurchaseServiceImpl.deletePurchase() is started");
         log.debug("Purchase to be deleted {} ", id);
+        User currentUser = userService.getCurrentUser();
 
         Purchase purchaseFromDB = purchaseRepo.findById(id)
                 .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
+        notificationService.sendNotificationForDelete(id, currentUser.getId());
 
         purchaseRepo.deleteById(id);
     }

@@ -17,6 +17,7 @@ import java.time.LocalDate;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Builder
+@ToString
 public class Purchase extends AbstractEntity {
 
     private Category category;
@@ -31,7 +32,6 @@ public class Purchase extends AbstractEntity {
     private Double totalCost;
     private LocalDate purchaseDate;
 
-    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
