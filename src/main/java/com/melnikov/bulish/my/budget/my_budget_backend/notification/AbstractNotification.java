@@ -1,15 +1,17 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.notification;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@ToString
-public class AbstractNotification<T> {
+public class AbstractNotification<Entity> {
 
     private String type;
     private NotificationStatus status;
-    private T entity;
+    private Entity entity;
 }

@@ -1,15 +1,14 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.job;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.token.TokenRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CleanExpiredToken {
+
     private final TokenRepository tokenRepo;
 
-    @Autowired
     public CleanExpiredToken(TokenRepository tokenRepo) {
         this.tokenRepo = tokenRepo;
     }

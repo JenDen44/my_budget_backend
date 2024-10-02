@@ -1,6 +1,5 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.purchase;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Category;
 import org.junit.jupiter.api.Test;
@@ -9,10 +8,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -29,6 +26,7 @@ public class PurchaseControllerTest {
 
     @Autowired
     ObjectMapper objectMapper;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -38,63 +36,60 @@ public class PurchaseControllerTest {
     @Test
     @WithMockUser(username = "test", password = "test")
     public void findAllPurchases() throws Exception {
-        String url = "/purchases";
-
-        MvcResult result = mockMvc.perform(get(url))
-                .andExpect(status().isOk())
-                .andDo(print())
-                .andReturn();
-
-        String jsonResponse = result.getResponse().getContentAsString();
-        Purchase[] purchases = objectMapper.readValue(jsonResponse, Purchase[].class);
+        var url = "/purchases";
+        var result = mockMvc.perform(get(url))
+            .andExpect(status().isOk())
+            .andDo(print())
+            .andReturn();
+        var jsonResponse = result.getResponse().getContentAsString();
+        var purchases = objectMapper.readValue(jsonResponse, Purchase[].class);
 
         assertThat(purchases).hasSizeGreaterThan(0);
     }
 
     @Test
     @WithMockUser(username = "test", password = "test")
-    public void createPurchase() throws JsonProcessingException, Exception {
-            String url = "/purchases";
-            LocalDate today = LocalDate.now();
-            PurchaseDto purchaseResponse = new PurchaseDto(Category.CLOTHE, 123.80, 2, today);
+    public void createPurchase() throws Exception {
+            var url = "/purchases";
+            var today = LocalDate.now();
+            var purchaseResponse = new PurchaseDto(Category.CLOTHE, 123.80, 2, today);
+            var result = mockMvc.perform(
+                    post(url).contentType("application/json")
+                        .content(objectMapper.writeValueAsString(purchaseResponse))
+                        .with(csrf())
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+            var response = result.getResponse().getContentAsString();
+            var purchaseFromResponse = objectMapper.readValue(response, Purchase.class);
+            var findById = repo.findById(purchaseFromResponse.getId());
 
-            MvcResult result = mockMvc.perform(post(url).contentType("application/json")
-                            .content(objectMapper.writeValueAsString(purchaseResponse))
-                            .with(csrf()))
-                    .andDo(print())
-                    .andExpect(status().isOk())
-                    .andReturn();
-
-            String response = result.getResponse().getContentAsString();
-            Purchase purchaseFromResponse = objectMapper.readValue(response, Purchase.class);
-
-            Optional<Purchase> findById = repo.findById(purchaseFromResponse.getId());
             assertThat(findById.isPresent());
 
         }
 
     @Test
     @WithMockUser(username = "test", password = "test")
-    public void updatePurchase() throws JsonProcessingException, Exception {
-        Integer purchaseId = 8;
-        String url = "/purchases/" + purchaseId;
-        LocalDate today = LocalDate.now();
+    public void updatePurchase() throws Exception {
+        var purchaseId = 8;
+        var url = "/purchases/" + purchaseId;
+        var today = LocalDate.now();
+        var purchaseResponse = new PurchaseDto(Category.FOOD, 123.80, 2, today);
+        var result = mockMvc.perform(
+                put(url).contentType("application/json")
+                    .content(objectMapper.writeValueAsString(purchaseResponse))
+                    .with(csrf())
+        )
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andReturn();
+        var response = result.getResponse().getContentAsString();
+        var purchaseFromResponse = objectMapper.readValue(response, Purchase.class);
+        var findById = repo.findById(purchaseId);
 
-        PurchaseDto purchaseResponse = new PurchaseDto(Category.FOOD, 123.80, 2, today);
-
-        MvcResult result = mockMvc.perform(put(url).contentType("application/json")
-                        .content(objectMapper.writeValueAsString(purchaseResponse))
-                        .with(csrf()))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String response = result.getResponse().getContentAsString();
-        Purchase purchaseFromResponse = objectMapper.readValue(response, Purchase.class);
-
-        Optional<Purchase> findById = repo.findById(purchaseId);
+        assertThat(purchaseFromResponse.getId().equals(purchaseId));
         assertThat(findById.isPresent());
-
         assertThat(findById.get().getCategory().equals(Category.FOOD));
 
     }
@@ -102,11 +97,12 @@ public class PurchaseControllerTest {
     @Test
     @WithMockUser(username = "test", password = "test")
     public void deletePurchase() throws Exception {
-        Integer purchaseId = 8;
-        String url = "/purchases/" + purchaseId;
+        var purchaseId = 8;
+        var url = "/purchases/" + purchaseId;
+
         mockMvc.perform(delete(url)).andExpect(status().isOk());
 
-        Optional<Purchase> findById = repo.findById(purchaseId);
+        var findById = repo.findById(purchaseId);
 
         assertThat(findById).isNotPresent();
     }

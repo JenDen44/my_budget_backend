@@ -1,15 +1,17 @@
-package com.melnikov.bulish.my.budget.my_budget_backend.errorhandler;
+package com.melnikov.bulish.my.budget.my_budget_backend.error_handler;
 
-import lombok.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Setter
-@Getter
-@ToString
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class ApiError {
+
     private Integer code;
     private String message;
     private List<ErrorField> fields;

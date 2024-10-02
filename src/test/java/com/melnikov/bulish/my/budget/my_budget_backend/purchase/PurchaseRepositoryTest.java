@@ -24,63 +24,60 @@ public class PurchaseRepositoryTest {
 
     @Test
     public void createPurchase() {
-        LocalDate date = LocalDate.now();
-        Purchase purchase = new Purchase(Category.CLOTHE, 679.0, 2, date);
+        var date = LocalDate.now();
+        var purchase = new Purchase(Category.CLOTHE, 679.0, 2, date);
+        var savedPurchase = repo.save(purchase);
 
-        Purchase savedPurchase = repo.save(purchase);
         assertThat(savedPurchase).isNotNull();
-
-
     }
 
     @Test
     public void updatePurchase() {
-        Integer id = 6;
-        Purchase purchase = repo.findById(id)
-                .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
-        Double newCost = purchase.getCost() * 2;
+        var id = 6;
+        var purchase = repo.findById(id)
+            .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
+        var newCost = purchase.getCost() * 2;
+
         purchase.setCost(newCost);
         purchase.setTotalCost(purchase.getTotalCost());
-        Purchase updatedPurchase = repo.save(purchase);
+
+        var updatedPurchase = repo.save(purchase);
 
         assertThat(updatedPurchase.getCost() == newCost);
-
     }
 
     @Test()
     public void findPurchase() {
-        Integer id = 3;
-        PurchaseNotFoundException exception = assertThrows(PurchaseNotFoundException.class, () -> {
-            Purchase purchase = repo.findById(id)
-                    .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
+        var id = 3;
+        var exception = assertThrows(PurchaseNotFoundException.class, () -> {
+            repo.findById(id)
+                .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
         });
-
-        String expectedMessage = "Purchase with id " +  id + " is not found in DB";
-        String actualMessage = exception.getMessage();
+        var expectedMessage = "Purchase with id " +  id + " is not found in DB";
+        var actualMessage = exception.getMessage();
 
         assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test
     public void findAllPurchases() {
-        List<Purchase> allPurchases = (List<Purchase>) repo.findAll();
+        var allPurchases = (List<Purchase>) repo.findAll();
 
         assertThat(!allPurchases.isEmpty());
-
-
     }
 
     @Test
     public void deletePurchase() {
-        Integer id = 6;
-        repo.deleteById(id);
-        PurchaseNotFoundException exception = assertThrows(PurchaseNotFoundException.class, () -> {
-            Purchase purchase = repo.findById(id)
-                    .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
-        });
+        var id = 6;
 
-        String expectedMessage = "Purchase with id 6 is not found in DB";
-        String actualMessage = exception.getMessage();
+        repo.deleteById(id);
+
+        var exception = assertThrows(PurchaseNotFoundException.class, () -> {
+            repo.findById(id)
+                .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
+        });
+        var expectedMessage = "Purchase with id 6 is not found in DB";
+        var actualMessage = exception.getMessage();
 
         assertTrue(actualMessage.contains(expectedMessage));
     }

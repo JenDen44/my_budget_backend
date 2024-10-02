@@ -15,28 +15,29 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private static final String[] WHITE_LIST_URL =
-            {"/register",
-            "/login",
-            "/logout",
-            "/swagger-resources",
-            "/swagger-resources/**",
-            "/swagger-ui/**",
-            "/webjars/**",
-            "/swagger-ui.html",
-            "/configuration/ui",
-            "/configuration/security",
-            "/v3/api-docs/**",
-            "/v2/api-docs",
-            "/v3/api-docs",
-            "/ws/**"};
+
+    private static final String[] WHITE_LIST_URL = {
+        "/register",
+        "/login",
+        "/swagger-resources",
+        "/swagger-resources/**",
+        "/swagger-ui/**",
+        "/webjars/**",
+        "/swagger-ui.html",
+        "/configuration/ui",
+        "/configuration/security",
+        "/v3/api-docs/**",
+        "/v2/api-docs",
+        "/v3/api-docs",
+        "/ws/**"
+    };
 
     private final JwtTokenFilter jwtAuthenticationFilter;
+
     private final AuthenticationProvider authenticationProvider;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-
         httpSecurity
                 .csrf()
                 .disable()
@@ -49,11 +50,10 @@ public class SecurityConfig {
                 .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(
-                        (request, response, authException)
-                                -> response.sendError(
-                                HttpServletResponse.SC_UNAUTHORIZED,
-                                authException.getLocalizedMessage()
-                        )
+                    (request, response, authException) -> response.sendError(
+                        HttpServletResponse.SC_UNAUTHORIZED,
+                        authException.getLocalizedMessage()
+                    )
                 )
                 .and()
                 .authenticationProvider(authenticationProvider)

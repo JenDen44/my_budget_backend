@@ -21,26 +21,26 @@ public class ReportControllerTest {
     @Test
     @WithMockUser(username = "test", password = "test")
     public void findTableReportItemsByDate() throws Exception {
-        String startDate = "2014-09-01";
-        String endDate = "2027-09-30";
-        String requestURL = "/reports/table";
+        var startDate = "2014-09-01";
+        var endDate = "2027-09-30";
+        var requestURL = "/reports/table";
 
          mockMvc.perform(get(requestURL)
-                 .param("startDate",startDate)
-                 .param("endDate",endDate))
-                 .andExpect(status().isOk()).andDo(print());
+             .param("startDate",startDate)
+             .param("endDate",endDate))
+             .andExpect(status().isOk()).andDo(print());
     }
 
     @Test
     @WithMockUser(username = "test", password = "test")
     public void findChartReportItemsByDate() throws Exception {
-        String startDate = "2014-09-01";
-        String endDate = "2027-09-30";
-        String requestURL = "/reports/chart";
+        var startDate = "2014-09-01";
+        var endDate = "2027-09-30";
+        var requestURL = "/reports/chart";
 
         mockMvc.perform(get(requestURL)
-                .param("startDate",startDate)
-                .param("endDate",endDate))
-                .andExpect(status().isOk()).andDo(print());
+            .param("startDate",startDate)
+            .param("endDate",endDate))
+            .andExpect(status().isOk()).andDo(print());
     }
 }

@@ -17,12 +17,14 @@ public class UserDto extends AbstractDto {
     @Size(min = 7, max = 18, message = "username size should be between 7 and 18")
     private String username;
 
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,20}$",
-            message = "Need to have one special symbol (i.e., @, #, $, %, etc.)," +
-                    "Consists of at least one digit," +
-                    "Use at least one lowercase letter," +
-                    "Include a capital letter," +
-                    "Minimum length of 8 characters and the maximum length of 20 characters")
+    @Pattern(
+        regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,20}$",
+        message = "Need to have one special symbol (i.e., @, #, $, %, etc.)," +
+            "Consists of at least one digit," +
+            "Use at least one lowercase letter," +
+            "Include a capital letter," +
+            "Minimum length of 8 characters and the maximum length of 20 characters"
+    )
     private String password;
 
     public UserDto(Integer id, String username, String password) {

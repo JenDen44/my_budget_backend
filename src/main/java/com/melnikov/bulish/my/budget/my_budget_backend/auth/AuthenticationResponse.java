@@ -14,11 +14,17 @@ import lombok.NoArgsConstructor;
 @Schema(description = "AuthenticationResponse Model Information")
 public class AuthenticationResponse {
 
-    @Schema(description = "Return access Token", example = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJEZW5pczM3ODM4MzQ0NjQ3IiwiaWF0IjoxNz")
+    @Schema(
+        description = "Return access Token",
+        example = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJEZW5pczM3ODM4MzQ0NjQ3IiwiaWF0IjoxNz"
+    )
     @JsonProperty("access_token")
     private String accessToken;
 
-    @Schema(description = "Return refresh Token", example = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJEZW5pczM3ODM4MzQ0NjQ3IiwiaWF0IjoxNz")
+    @Schema(
+        description = "Return refresh Token",
+        example = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJEZW5pczM3ODM4MzQ0NjQ3IiwiaWF0IjoxNz"
+    )
     @JsonProperty("refresh_token")
     private String refreshToken;
 }

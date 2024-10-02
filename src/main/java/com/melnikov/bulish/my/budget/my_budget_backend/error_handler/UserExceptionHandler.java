@@ -1,4 +1,4 @@
-package com.melnikov.bulish.my.budget.my_budget_backend.errorhandler;
+package com.melnikov.bulish.my.budget.my_budget_backend.error_handler;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.user.UserNotFoundException;
 import com.melnikov.bulish.my.budget.my_budget_backend.user.UserValidationException;
@@ -10,25 +10,26 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @RestControllerAdvice
 public class UserExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiErrorNotFound> userExceptionHandler(UserNotFoundException ex) {
-        final ApiErrorNotFound apiErrorNotFound = new ApiErrorNotFound(ex.getLocalizedMessage());
+        final var apiErrorNotFound = new ApiErrorNotFound(ex.getLocalizedMessage());
 
-        return new ResponseEntity<ApiErrorNotFound>(apiErrorNotFound, new HttpHeaders(), apiErrorNotFound.getCode());
+        return new ResponseEntity(apiErrorNotFound, new HttpHeaders(), apiErrorNotFound.getCode());
     }
 
     @ExceptionHandler(UserValidationException.class)
     public ResponseEntity<ApiErrorValidation> userExceptionHandler(UserValidationException ex) {
         final List<ErrorField> errors = new ArrayList();
-        if (ex.getLocalizedMessage().contains("password")) errors.add(new ErrorField("password", ex.getLocalizedMessage()));
-            else errors.add(new ErrorField("username", ex.getLocalizedMessage()));
 
-        final ApiErrorValidation apiErrorValidation = new ApiErrorValidation(errors);
+        if (ex.getLocalizedMessage().contains("password"))
+            errors.add(new ErrorField("password", ex.getLocalizedMessage()));
+        else errors.add(new ErrorField("username", ex.getLocalizedMessage()));
 
-        return new ResponseEntity<ApiErrorValidation>(apiErrorValidation, new HttpHeaders(), apiErrorValidation.getCode());
+        final var apiErrorValidation = new ApiErrorValidation(errors);
+
+        return new ResponseEntity(apiErrorValidation, new HttpHeaders(), apiErrorValidation.getCode());
     }
 }

@@ -17,6 +17,7 @@ public class Token extends AbstractEntity {
 
     @Column(unique = true)
     private String token;
+
     private Instant expiryDate;
 
     @Enumerated(EnumType.STRING)
@@ -29,5 +30,4 @@ public class Token extends AbstractEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-
 }

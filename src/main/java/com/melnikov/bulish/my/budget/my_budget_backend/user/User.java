@@ -24,6 +24,7 @@ import java.util.List;
 public class User extends AbstractEntity implements UserDetails {
 
     private String username;
+
     private String password;
 
     @ToString.Exclude
@@ -38,6 +39,7 @@ public class User extends AbstractEntity implements UserDetails {
         this.username = username;
         this.password = password;
     }
+
     public User(UserDto userDto) {
         this.id = userDto.getId();
         this.username = userDto.getUsername();

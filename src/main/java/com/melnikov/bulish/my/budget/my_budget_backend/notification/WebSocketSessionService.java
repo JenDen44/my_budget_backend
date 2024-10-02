@@ -21,15 +21,17 @@ public class WebSocketSessionService {
         userSessions.remove(session);
     }
 
-    public void sendMessage(Integer id, WebSocketPayload<?> payload) {
-        try {
-            for (Map.Entry<WebSocketSession, Integer> entry : userSessions.entrySet()) {
-                if (entry.getValue().equals(id)) {
+    public <TData> void sendMessage(Integer id, TData data) {
+        var payload = new WebSocketPayload(data);
+
+        for (Map.Entry<WebSocketSession, Integer> entry : userSessions.entrySet()) {
+            if (entry.getValue().equals(id)) {
+                try {
                     entry.getKey().sendMessage(payload.toTextMessage());
+                } catch (Exception e) {
+                    log.error("Failed to send message to user: {}", id, e);
                 }
             }
-        } catch (Exception e) {
-            log.error("Failed to send message to user: {}", id, e);
         }
     }
 }

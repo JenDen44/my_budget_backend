@@ -7,9 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -25,6 +22,7 @@ public class UserControllerTest {
 
     @Autowired
     ObjectMapper objectMapper;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -34,75 +32,70 @@ public class UserControllerTest {
     @Test
     @WithMockUser(username = "test", password = "test")
     public void findAllUsers() throws Exception {
-        String url = "/users";
+        var url = "/users";
+        var result = mockMvc.perform(get(url))
+            .andExpect(status().isOk())
+            .andDo(print())
+            .andReturn();
+        var jsonResponse = result.getResponse().getContentAsString();
+        var users = objectMapper.readValue(jsonResponse, User[].class);
 
-        MvcResult result = mockMvc.perform(get(url))
-                .andExpect(status().isOk())
-                .andDo(print())
-                .andReturn();
-
-        String jsonResponse = result.getResponse().getContentAsString();
-        User[] users = objectMapper.readValue(jsonResponse, User[].class);
-
-             assertThat(users).hasSizeGreaterThan(0);
+        assertThat(users).hasSizeGreaterThan(0);
     }
 
     @Test
     @WithMockUser(username = "test", password = "test")
     public void createUser() throws  Exception {
-        String url = "/users";
-        UserDto userDto = new UserDto("user@yandex.ru","1273пупв");
+        var url = "/users";
+        var userDto = new UserDto("user@yandex.ru","1273пупв");
+        var result = mockMvc.perform(
+                post(url).contentType("application/json")
+                    .content(objectMapper.writeValueAsString(userDto))
+                    .with(csrf())
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andReturn();
+        var response = result.getResponse().getContentAsString();
+        var userFromResponse = objectMapper.readValue(response, User.class);
+        var findById = userRepo.findById(userFromResponse.getId());
 
-        MvcResult result = mockMvc.perform(post(url).contentType("application/json")
-                        .content(objectMapper.writeValueAsString(userDto))
-                        .with(csrf()))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String response = result.getResponse().getContentAsString();
-        User userFromResponse = objectMapper.readValue(response, User.class);
-        Optional<User> findById = userRepo.findById(userFromResponse.getId());
-
-             assertThat(findById.isPresent());
-
+        assertThat(findById.isPresent());
     }
 
     @Test
     @WithMockUser(username = "test", password = "test")
     public void updateUser() throws JsonProcessingException, Exception {
-        Integer userId = 2;
-        String url = "/users/" + userId;
+        var userId = 2;
+        var url = "/users/" + userId;
+        var userDto = new UserDto("changedUser@yandex.ru","1273пупв");
+        var result = mockMvc.perform(
+                put(url).contentType("application/json")
+                    .content(objectMapper.writeValueAsString(userDto))
+                    .with(csrf())
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andReturn();
+        var response = result.getResponse().getContentAsString();
+        var userFromResponse = objectMapper.readValue(response, User.class);
+        var findById = userRepo.findById(userId);
 
-        UserDto userDto = new UserDto("changedUser@yandex.ru","1273пупв");
-
-        MvcResult result = mockMvc.perform(put(url).contentType("application/json")
-                        .content(objectMapper.writeValueAsString(userDto))
-                        .with(csrf()))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String response = result.getResponse().getContentAsString();
-        User userFromResponse = objectMapper.readValue(response, User.class);
-
-        Optional<User> findById = userRepo.findById(userId);
-
-            assertThat(findById.isPresent());
-            assertThat(userFromResponse.getUsername().equals("changedUser@yandex.ru"));
-
+        assertThat(findById.isPresent());
+        assertThat(userFromResponse.getUsername().equals("changedUser@yandex.ru"));
     }
 
     @Test
     @WithMockUser(username = "test", password = "test")
     public void deleteUser() throws Exception {
-        Integer userId = 2;
-        String url = "/users/" + userId;
+        var userId = 2;
+        var url = "/users/" + userId;
 
         mockMvc.perform(delete(url)).andExpect(status().isOk());
-        Optional<User> findById = userRepo.findById(userId);
 
-            assertThat(findById).isNotPresent();
+        var findById = userRepo.findById(userId);
+
+        assertThat(findById).isNotPresent();
     }
 }
 

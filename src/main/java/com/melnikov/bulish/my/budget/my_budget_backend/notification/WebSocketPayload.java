@@ -13,8 +13,8 @@ import org.springframework.web.socket.TextMessage;
 public class WebSocketPayload<TData extends Object> {
 
     private static final ObjectMapper mapper = JsonMapper.builder()
-            .addModule(new JavaTimeModule())
-            .build();
+        .addModule(new JavaTimeModule())
+        .build();
 
     private TData data;
 
@@ -29,19 +29,12 @@ public class WebSocketPayload<TData extends Object> {
         } catch (JsonProcessingException e) {
             log.error(e.toString());
             e.printStackTrace();
+
             return "Invalid WebSocketPayload";
         }
     }
 
     public TextMessage toTextMessage() {
         return new TextMessage(toString());
-    }
-
-    public static WebSocketPayload<String> message(String message) {
-        return new WebSocketPayload<>(message);
-    }
-
-    public static <TData> WebSocketPayload<TData> of(TData data) {
-        return new WebSocketPayload<>(data);
     }
 }

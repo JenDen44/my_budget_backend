@@ -1,9 +1,7 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.report;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Category;
-import com.melnikov.bulish.my.budget.my_budget_backend.purchase.Purchase;
 import com.melnikov.bulish.my.budget.my_budget_backend.purchase.PurchaseRepository;
-import com.melnikov.bulish.my.budget.my_budget_backend.user.User;
 import com.melnikov.bulish.my.budget.my_budget_backend.user.UserServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +14,7 @@ import java.util.*;
 @Slf4j
 @Service
 public  class ReportService {
+
     private final PurchaseRepository purchaseRepository;
     private final UserServiceImpl userService;
 
@@ -26,32 +25,39 @@ public  class ReportService {
     }
 
     public List<ReportTable> getTableReportItemsByDate(String startDate, String endDate) {
-        log.debug("ReportService.getTableReportItemsByDate() started with parameters : startDate {} and " +
-                "endDate {} ", startDate, endDate);
+        log.debug(
+            "ReportService.getTableReportItemsByDate() started with parameters : startDate {} and endDate {}",
+            startDate,
+            endDate
+        );
 
-        User currentUser = userService.getCurrentUser();
+        var currentUser = userService.getCurrentUser();
+
         log.debug("current user {} ", currentUser);
 
-        Map<LocalDate, Map<Category, Double>> map = new HashMap<>();
-        List<ReportTable> reportTables = new ArrayList<>();
+        var startTime = LocalDate.parse(startDate, DateTimeFormatter.ofPattern("y-M-d"));
+        var endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
+        var purchases = purchaseRepository.findPurchaseWithTimeBetween(startTime, endTime, currentUser.getId());
 
-        LocalDate startTime = LocalDate.parse(startDate, DateTimeFormatter.ofPattern("y-M-d"));
-        LocalDate endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
-
-        List<Purchase> purchases = purchaseRepository.findPurchaseWithTimeBetween(startTime, endTime, currentUser.getId());
         log.debug("purchases between startDate {} and end date {}, {} ", startDate, endDate, purchases);
 
-        for (Purchase purchase : purchases) {
-            Map<Category,Double> mapCategory = map.getOrDefault(purchase.getPurchaseDate(), new HashMap<>());
-            double total = mapCategory.getOrDefault(purchase.getCategory(),0.0);
-            total+=purchase.getTotalCost();
+        var map = new HashMap<LocalDate, HashMap<Category, Double>>();
+
+        for (var purchase : purchases) {
+            var mapCategory = map.getOrDefault(purchase.getPurchaseDate(), new HashMap<Category, Double>());
+            var total = mapCategory.getOrDefault(purchase.getCategory(),0.0);
+            total += purchase.getTotalCost();
+
             mapCategory.put(purchase.getCategory(), total);
             map.put(purchase.getPurchaseDate(), mapCategory);
         }
 
-        for (Map.Entry<LocalDate, Map<Category, Double>> entry: map.entrySet()) {
+        var reportTables = new ArrayList<ReportTable>();
+
+        for (var entry: map.entrySet()) {
             reportTables.add(new ReportTable(entry.getKey(), entry.getValue()));
         }
+
         Collections.sort(reportTables, new Comparator<ReportTable>() {
             @Override
             public int compare(ReportTable o1, ReportTable o2) {
@@ -59,36 +65,41 @@ public  class ReportService {
             }
         });
 
-             return reportTables;
+         return reportTables;
     }
 
     public List<ReportChart> getChartReportItemsByDate(String startDate, String endDate) {
-        log.debug("ReportService.getChartReportItemsByDate() started with parameters : startDate {} and " +
-                "endDate {} ", startDate, endDate);
+        log.debug(
+            "ReportService.getChartReportItemsByDate() started with parameters : startDate {} and endDate {}",
+            startDate,
+            endDate
+        );
 
-        User currentUser = userService.getCurrentUser();
+        var currentUser = userService.getCurrentUser();
+
         log.debug("current user {} ", currentUser);
 
-        Map<Category, Double> totalByCategory = new HashMap<>();
-        List<ReportChart> reportCharts = new ArrayList<>();
+        var startTime = LocalDate.parse(startDate, DateTimeFormatter.ofPattern("y-M-d"));
+        var endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
+        var purchases = purchaseRepository.findPurchaseWithTimeBetween(startTime, endTime, currentUser.getId());
 
-        LocalDate startTime = LocalDate.parse(startDate, DateTimeFormatter.ofPattern("y-M-d"));
-        LocalDate endTime = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("y-M-d"));
-
-        List<Purchase> purchases = purchaseRepository.findPurchaseWithTimeBetween(startTime, endTime, currentUser.getId());
         log.debug("purchases between startDate {} and end date {}, {} ", startDate, endDate, purchases);
 
-        if (purchases.isEmpty()) return reportCharts;
+        var totalByCategory = new HashMap<Category, Double>();
 
-        for (Purchase purchase : purchases) {
+        for (var purchase : purchases) {
             double total = totalByCategory.getOrDefault(purchase.getCategory(),0.0);
             total+=purchase.getTotalCost();
+
             totalByCategory.put(purchase.getCategory(), total);
         }
 
-        for (Map.Entry<Category,Double> entry: totalByCategory.entrySet()) {
+        var reportCharts = new ArrayList<ReportChart>();
+
+        for (var entry: totalByCategory.entrySet()) {
             reportCharts.add(new ReportChart(entry.getKey(), entry.getValue()));
         }
-             return reportCharts;
+
+        return reportCharts;
     }
 }

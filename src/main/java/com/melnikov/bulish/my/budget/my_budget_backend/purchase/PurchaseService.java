@@ -2,18 +2,14 @@ package com.melnikov.bulish.my.budget.my_budget_backend.purchase;
 
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public interface PurchaseService {
 
-    public PurchaseDto findPurchaseById(Integer id);
+    PurchaseDto findPurchaseById(Integer id);
 
-    public List<PurchaseDto> findAllPurchases();
+    PurchaseDto savePurchase(PurchaseRequest purchase);
 
-    public PurchaseDto savePurchase(PurchaseRequest purchase);
+    PurchaseDto updatePurchase(PurchaseDto purchase, Integer id);
 
-    public PurchaseDto updatePurchase(PurchaseDto purchase, Integer id);
-
-    public void deletePurchase(Integer id);
+    void deletePurchase(Integer id);
 }

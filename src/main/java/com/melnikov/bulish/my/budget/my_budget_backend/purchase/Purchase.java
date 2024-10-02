@@ -7,7 +7,10 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
@@ -17,19 +20,20 @@ import java.time.LocalDate;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Builder
-@ToString
 public class Purchase extends AbstractEntity {
 
     private Category category;
 
     @Min(value = 1, message = "cost can't be negative or 0")
-    @NotNull(message = "cost can't be null")
     private Double cost;
 
     @Min(value = 1, message = "quantity  can't be less 1")
     @Max(value = 5000, message = "quantity  can't be more 5000")
     private Integer quantity;
+
     private Double totalCost;
+
+    @NotNull(message = "purchaseDate  must be filled")
     private LocalDate purchaseDate;
 
     @ManyToOne(fetch = FetchType.LAZY)

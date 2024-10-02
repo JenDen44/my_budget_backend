@@ -4,55 +4,40 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Slf4j
 @Service
 @Transactional
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl {
 
     private final UserRepository userRepo;
+
     @Autowired
     public UserServiceImpl(UserRepository userRepo) {
         this.userRepo = userRepo;
     }
 
-    @Override
-    public UserDto findUserById(Integer id) {
-        log.debug("UserServiceImpl.findUserById() is started with parameters {} ", id);
-
-        User user = userRepo.findById(id)
-                .orElseThrow (() -> new UserNotFoundException("User with id " + id + " is not found in DB"));
-        log.debug("User from db {} ", user);
-
-        return new UserDto(user);
-    }
-
     public boolean isUserNameUnique(String userName) {
-
-       return userRepo.findByUsername(userName).isEmpty();
-
+        return userRepo.findByUsername(userName).isEmpty();
     }
 
     public User getCurrentUser() {
-        Optional<User> currentUser = null;
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof AnonymousAuthenticationToken)) {
-            String currentUserName = authentication.getName();
-            currentUser = userRepo.findByUsername(currentUserName);
+        if (authentication instanceof AnonymousAuthenticationToken) {
+            throw new UserNotFoundException("No one Authenticated user is returned");
         }
 
-         return currentUser.orElseThrow(() -> new UserNotFoundException("No one Authenticated user is returned"));
+        var currentUserName = authentication.getName();
+
+        return userRepo.findByUsername(currentUserName)
+            .orElseThrow(() -> new UserNotFoundException("No one Authenticated user is returned"));
     }
 
     public User findByUserName(String username) {
-       Optional<User> user = userRepo.findByUsername(username);
-
-        return user.orElseThrow(() -> new UserNotFoundException("No one user was found"));
+        return userRepo.findByUsername(username)
+            .orElseThrow(() -> new UserNotFoundException("No one user was found"));
     }
 }
