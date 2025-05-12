@@ -65,7 +65,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         return purchasesByCurrentUser
             .getContent()
             .stream()
-            .map(p -> new PurchaseDto(p))
+            .map(PurchaseDto::new)
             .collect(Collectors.toList());
     }
 

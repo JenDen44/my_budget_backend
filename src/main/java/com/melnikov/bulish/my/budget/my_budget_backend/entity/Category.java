@@ -1,5 +1,8 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.entity;
 
+import lombok.Getter;
+
+@Getter
 public enum Category {
 
     FOOD("FOOD"),
@@ -7,14 +10,9 @@ public enum Category {
     EDUCATION("EDUCATION"),
     ENTERTAINMENT("ENTERTAINMENT");
 
-    private String code;
+    private final String code;
 
-    private Category(String code) {
+    Category(String code) {
         this.code = code;
     }
-
-    public String getCode() {
-        return code;
-    }
-
 }
