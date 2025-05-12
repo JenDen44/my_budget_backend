@@ -2,8 +2,7 @@ package com.melnikov.bulish.my.budget.my_budget_backend.repository;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Purchase;
 import com.melnikov.bulish.my.budget.my_budget_backend.enums.Category;
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.PurchaseNotFoundException;
-import com.melnikov.bulish.my.budget.my_budget_backend.repository.PurchaseRepository;
+import com.melnikov.bulish.my.budget.my_budget_backend.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -38,7 +37,7 @@ public class PurchaseRepositoryTest {
     public void updatePurchase() {
         var id = 6;
         var purchase = repo.findById(id)
-            .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
+            .orElseThrow (() -> new ResourceNotFoundException("Purchase", String.valueOf(id)));
         var newCost = purchase.getCost() * 2;
 
         purchase.setCost(newCost);
@@ -52,9 +51,9 @@ public class PurchaseRepositoryTest {
     @Test()
     public void findPurchase() {
         var id = 3;
-        var exception = assertThrows(PurchaseNotFoundException.class, () -> {
+        var exception = assertThrows(ResourceNotFoundException.class, () -> {
             repo.findById(id)
-                .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
+                .orElseThrow (() -> new ResourceNotFoundException("Purchase", String.valueOf(id)));
         });
         var expectedMessage = "Purchase with id " +  id + " is not found in DB";
         var actualMessage = exception.getMessage();
@@ -75,9 +74,9 @@ public class PurchaseRepositoryTest {
 
         repo.deleteById(id);
 
-        var exception = assertThrows(PurchaseNotFoundException.class, () -> {
+        var exception = assertThrows(ResourceNotFoundException.class, () -> {
             repo.findById(id)
-                .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
+                .orElseThrow (() -> new ResourceNotFoundException("Purchase", String.valueOf(id)));
         });
         var expectedMessage = "Purchase with id 6 is not found in DB";
         var actualMessage = exception.getMessage();

@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
@@ -16,7 +15,6 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "purchases")
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Builder
 public class Purchase extends AbstractEntity {

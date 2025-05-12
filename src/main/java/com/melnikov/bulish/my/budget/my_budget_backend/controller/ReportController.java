@@ -7,7 +7,9 @@ import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportTable;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,8 +47,8 @@ public class ReportController {
     )
     @GetMapping("table")
     public ResponseEntity<List<ReportTable>> getTableReportDataByDatePeriod(
-        @JsonFormat(pattern="y-M-d") @RequestParam("startDate") String startDate,
-        @JsonFormat(pattern="y-M-d") @RequestParam("endDate") String endDate
+            @RequestParam("startDate") @NotNull @DateTimeFormat(pattern="yyyy-M-d") String startDate,
+            @RequestParam("endDate") @NotNull @DateTimeFormat(pattern="yyyy-M-d")  String endDate
     ) {
         return ResponseEntity.ok(reportService.getTableReportItemsByDate(startDate,endDate));
     }
@@ -71,8 +73,8 @@ public class ReportController {
     )
     @GetMapping("chart")
     public ResponseEntity<List<ReportChart>> getChartReportDataByDatePeriod(
-        @JsonFormat(pattern="y-M-d") @RequestParam("startDate") String startDate,
-        @JsonFormat(pattern="y-M-d") @RequestParam("endDate") String endDate
+            @RequestParam("startDate") @NotNull @DateTimeFormat(pattern="yyyy-M-d") String startDate,
+            @RequestParam("endDate") @NotNull @DateTimeFormat(pattern="yyyy-M-d") String endDate
     ) {
         return ResponseEntity.ok(reportService.getChartReportItemsByDate(startDate,endDate));
     }

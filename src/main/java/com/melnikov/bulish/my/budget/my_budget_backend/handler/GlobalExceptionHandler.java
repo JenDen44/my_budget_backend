@@ -1,67 +1,90 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.handler;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.exception.ResourceNotFoundException;
+import com.melnikov.bulish.my.budget.my_budget_backend.exception.UserValidationException;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.ApiErrorNotFound;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.ApiErrorValidation;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.ErrorField;
+import com.melnikov.bulish.my.budget.my_budget_backend.model.ErrorResponseDto;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.xml.bind.ValidationException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-@RestControllerAdvice
-public class GlobalExceptionHandler {
+@ControllerAdvice
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<ApiErrorNotFound> notFoundExceptionHandler(NoHandlerFoundException ex) {
-        final var apiErrorNotFound = new ApiErrorNotFound(ex.getLocalizedMessage());
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        final var errors = new ArrayList<ErrorField>();
 
-        return new ResponseEntity(apiErrorNotFound, new HttpHeaders(), apiErrorNotFound.getCode());
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String validationMsg = error.getDefaultMessage();
+            errors.add(new ErrorField(fieldName, validationMsg));
+        });
+
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<ApiErrorNotFound> missingRequestParamsExceptionHandler(MissingServletRequestParameterException ex) {
-        final var apiErrorNotFound = new ApiErrorNotFound(ex.getLocalizedMessage());
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponseDto> handleGlobalException(Exception exception,
+                                                                  WebRequest webRequest) {
+        var errorResponseDTO = ErrorResponseDto
+                .builder()
+                .errorCode(HttpStatus.INTERNAL_SERVER_ERROR)
+                .errorTime(LocalDateTime.now())
+                .errorMessage(exception.getMessage())
+                .apiPath(webRequest.getDescription(false))
+                .build();
 
-        return new ResponseEntity(apiErrorNotFound, new HttpHeaders(), apiErrorNotFound.getCode());
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ApiErrorValidation> fieldValidationExceptionHandler(ConstraintViolationException ex) {
-        final List<ErrorField> errors = new ArrayList();
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(ResourceNotFoundException exception,
+                                                                            WebRequest webRequest) {
+        var errorResponseDTO = new ErrorResponseDto(
+                webRequest.getDescription(false),
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
 
-        for (final var violation : ex.getConstraintViolations()) {
-            errors.add(new ErrorField(violation.getPropertyPath().toString(), violation.getMessage()));
-        }
-
-        final var apiErrorValidation = new ApiErrorValidation(errors);
-
-        return new ResponseEntity(apiErrorValidation, new HttpHeaders(), apiErrorValidation.getCode());
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(DateTimeParseException.class)
-    public ResponseEntity<ApiErrorValidation> dataValidationExceptionHandler(DateTimeParseException ex) {
-        final var apiErrorValidation = new ApiErrorValidation(ex.getLocalizedMessage());
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ErrorResponseDto> handleValidationException(ValidationException exception,
+                                                                        WebRequest webRequest) {
+        var errorResponseDTO = new ErrorResponseDto(
+                webRequest.getDescription(false),
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
 
-        return new ResponseEntity(apiErrorValidation, new HttpHeaders(), apiErrorValidation.getCode());
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiErrorValidation> methodArgumentExceptionHandler(MethodArgumentNotValidException ex) {
-        final List<ErrorField> errors = new ArrayList();
-
-        errors.add(new ErrorField(ex.getFieldError().getField(), ex.getFieldError().getDefaultMessage()));
-
-        final var apiErrorValidation = new ApiErrorValidation(errors);
-
-        return new ResponseEntity(apiErrorValidation, new HttpHeaders(), apiErrorValidation.getCode());
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
     }
 
 }

@@ -1,12 +1,9 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.TokenValidationException;
+import com.melnikov.bulish.my.budget.my_budget_backend.exception.*;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Token;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
 import com.melnikov.bulish.my.budget.my_budget_backend.enums.TokenType;
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.TokenNotFoundException;
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.UserNotFoundException;
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.UserValidationException;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.AuthenticationRequest;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.AuthenticationResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.TokenRepository;
@@ -36,7 +33,7 @@ public class AuthenticationService {
         log.debug("AuthenticationService.register() started");
 
         if (!userService.isUserNameUnique(request.getUsername()))
-            throw new UserValidationException("The username is already in use");
+            throw new ValidationException("User","Username is already in use");
 
         var user = User.builder()
                 .username(request.getUsername())
@@ -66,9 +63,7 @@ public class AuthenticationService {
         );
 
         var user = userRepository.findByUsername(request.getUsername())
-            .orElseThrow(() ->
-                new UserNotFoundException("User with username " + request.getUsername() + " is not found in DB")
-            );
+            .orElseThrow(() -> new ResourceNotFoundException("User", request.getUsername()));
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
 
@@ -114,7 +109,7 @@ public class AuthenticationService {
 
         if (authHeader == null || !authHeader.startsWith("Bearer")) {
             log.error("TokenValidationException : Header doesn't contain correct data for token");
-            throw new TokenValidationException("Header doesn't contain correct data for token");
+            throw new ValidationException("Token","Header doesn't contain correct data for token");
         }
 
         var refreshToken = authHeader.substring(7);
@@ -122,21 +117,21 @@ public class AuthenticationService {
 
         if (userEmail == null) {
             log.error("TokenValidationException : The extracted userEmail from token is null");
-            throw new TokenValidationException("The extracted userEmail from token is null");
+            throw new ValidationException("Token","Extracted email from token is null");
         }
 
         tokenRepository.findByToken(refreshToken).
-                orElseThrow(() -> new TokenNotFoundException("Token not found in DB"));
+                orElseThrow(() -> new ResourceNotFoundException("Token", userEmail));
 
 
         var user = this.userRepository.findByUsername(userEmail)
-            .orElseThrow(() -> new UserNotFoundException("User not found in DB by username/email " + userEmail));
+            .orElseThrow(() -> new ResourceNotFoundException("User", userEmail));
 
         log.debug("current user requested refresh {} ", user);
 
         if (!jwtService.isTokenValid(refreshToken, user)) {
             log.error("TokenValidationException : The token is not valid");
-            throw new TokenValidationException("The token is not valid");
+            throw new ValidationException("Token","is not valid");
         }
 
         var newJwtToken = jwtService.generateToken(user);

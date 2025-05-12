@@ -15,10 +15,9 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @Data
-@Builder
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class User extends AbstractEntity implements UserDetails {
 
     private String username;

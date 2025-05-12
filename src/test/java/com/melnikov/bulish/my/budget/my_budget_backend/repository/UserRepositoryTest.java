@@ -1,8 +1,7 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.repository;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.UserNotFoundException;
-import com.melnikov.bulish.my.budget.my_budget_backend.repository.UserRepository;
+import com.melnikov.bulish.my.budget.my_budget_backend.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -32,7 +31,7 @@ public class UserRepositoryTest {
     public void updateUser() {
         var id = 1;
         var user = userRepo.findById(id)
-            .orElseThrow (() -> new UserNotFoundException("User with id " + id + " is not found in DB"));
+            .orElseThrow (() -> new ResourceNotFoundException("User", String.valueOf(id)));
 
         user.setUsername("denis@mail.ru");
 
@@ -51,9 +50,9 @@ public class UserRepositoryTest {
     @Test
     public void findUserById() {
         var id = 3;
-        var userNotFoundExc = assertThrows(UserNotFoundException.class, () -> {
+        var userNotFoundExc = assertThrows(ResourceNotFoundException.class, () -> {
            userRepo.findById(id)
-               .orElseThrow (() -> new UserNotFoundException("User with id " + id + " is not found in DB"));
+               .orElseThrow (() -> new ResourceNotFoundException("User", String.valueOf(id)));
         });
         var expectedMessage = "User with id " +  id + " is not found in DB";
         var actualMessage = userNotFoundExc.getMessage();
@@ -67,9 +66,9 @@ public class UserRepositoryTest {
 
         userRepo.deleteById(id);
 
-        var userNotFoundExc = assertThrows(UserNotFoundException.class, () -> {
+        var userNotFoundExc = assertThrows(ResourceNotFoundException.class, () -> {
             userRepo.findById(id)
-                .orElseThrow (() -> new UserNotFoundException("User with id " + id + " is not found in DB"));
+                .orElseThrow (() -> new ResourceNotFoundException("User", String.valueOf(id)));
         });
         var expectedMessage = "User with id " +  id + " is not found in DB";
         var actualMessage = userNotFoundExc.getMessage();

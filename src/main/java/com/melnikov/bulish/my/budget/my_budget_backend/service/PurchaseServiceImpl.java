@@ -1,8 +1,8 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Purchase;
+import com.melnikov.bulish.my.budget.my_budget_backend.exception.ResourceNotFoundException;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseDto;
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.PurchaseNotFoundException;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseRequest;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.PurchaseRepository;
 import jakarta.transaction.Transactional;
@@ -38,7 +38,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     public PurchaseDto findPurchaseById(Integer id) {
         Purchase purchase = purchaseRepo.findById(id)
-                .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
+                .orElseThrow (() -> new ResourceNotFoundException("Purchase", String.valueOf(id)));
 
         return new PurchaseDto(purchase);
     }
@@ -108,7 +108,7 @@ public class PurchaseServiceImpl implements PurchaseService {
 
         var currentUser = userService.getCurrentUser();
         var purchaseFromDB = purchaseRepo.findById(id)
-            .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
+                .orElseThrow (() -> new ResourceNotFoundException("Purchase",String.valueOf(id)));
 
         log.debug("before update {} ", purchaseFromDB);
 
@@ -136,7 +136,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         var currentUser = userService.getCurrentUser();
 
         purchaseRepo.findById(id)
-                .orElseThrow (() -> new PurchaseNotFoundException("Purchase with id " + id + " is not found in DB"));
+                .orElseThrow (() -> new ResourceNotFoundException("Purchase", String.valueOf(id)));
         notificationService.sendNotificationForDelete(id, currentUser.getId());
         purchaseRepo.deleteById(id);
     }
