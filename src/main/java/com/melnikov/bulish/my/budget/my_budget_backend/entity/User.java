@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.UserDto;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
@@ -22,6 +23,7 @@ public class User extends AbstractEntity implements UserDetails {
 
     private String username;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @ToString.Exclude

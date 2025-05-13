@@ -1,5 +1,8 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +21,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class MyBudgetBeanConfig {
 
     private final UserRepository repository;
+
+    @Bean
+    public ObjectMapper mapper() {
+        return JsonMapper.builder()
+                .addModule(new JavaTimeModule())
+                .build();
+    }
 
     @Bean
     public UserDetailsService userDetailsService() {

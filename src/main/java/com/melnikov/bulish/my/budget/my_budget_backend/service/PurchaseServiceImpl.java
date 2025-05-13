@@ -6,8 +6,8 @@ import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseDto;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseRequest;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.PurchaseRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -17,52 +17,37 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class PurchaseServiceImpl implements PurchaseService {
 
     private final PurchaseRepository purchaseRepo;
     private final UserServiceImpl userService;
     private final PurchaseNotificationService notificationService;
 
-    @Autowired
-    public PurchaseServiceImpl(
-        PurchaseRepository purchaseRepo,
-        UserServiceImpl userService,
-        PurchaseNotificationService notificationService
-    ) {
-        this.purchaseRepo = purchaseRepo;
-        this.userService = userService;
-        this.notificationService = notificationService;
-    }
-
     @Override
-    public PurchaseDto findPurchaseById(Integer id) {
-        Purchase purchase = purchaseRepo.findById(id)
-                .orElseThrow (() -> new ResourceNotFoundException("Purchase", String.valueOf(id)));
+    public PurchaseDto findPurchaseDtoById(Integer id) {
+        Purchase purchase = purchaseRepo.findById(id).orElseThrow(() -> {
+                    log.error("ResourceNotFoundException {}", id);
+                    return new ResourceNotFoundException("Purchase", String.valueOf(id));
+                });
 
         return new PurchaseDto(purchase);
     }
 
     public List<PurchaseDto> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir) {
-        log.debug(
-            "PurchaseServiceImpl.getPurchasesForCurrentUser() pageNo {}, pageSize {}, sortBy {}, sortDir {}",
-            pageNo,
-            pageSize,
-            sortBy,
-            sortDir
-        );
+        log.info("PurchaseServiceImpl.getPurchasesForCurrentUser() pageNo {}, pageSize {}, sortBy {}, sortDir {}",
+            pageNo, pageSize, sortBy, sortDir);
 
         var currentUser = userService.getCurrentUser();
-
-        log.debug("Current user {} ", currentUser);
+        log.debug("Current user id {}, username {}", currentUser.getId(), currentUser.getUsername());
 
         var sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ?
             Sort.by(sortBy).ascending() :
             Sort.by(sortBy).descending();
         var pg = PageRequest.of(pageNo, pageSize, sort);
-        var purchasesByCurrentUser = purchaseRepo.findByUserWithPagination(currentUser.getId(), pg);
+        var purchasesByCurrentUser = purchaseRepo.findByUserId(currentUser.getId(), pg);
 
-        log.debug("purchases list from DB is empty ? {} ", purchasesByCurrentUser.isEmpty());
+        log.info("purchases list from DB is empty ? {} ", purchasesByCurrentUser.isEmpty());
         log.debug("{}", purchasesByCurrentUser.getContent());
 
         return purchasesByCurrentUser
@@ -73,12 +58,12 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
+    @Transactional
     public PurchaseDto savePurchase(PurchaseRequest purchaseRequest) {
-        log.debug("PurchaseServiceImpl.savePurchase() is started");
+        log.info("PurchaseServiceImpl.savePurchase() is started");
 
         var currentUser = userService.getCurrentUser();
-
-        log.debug("current user {} ", currentUser);
+        log.debug("Current user id {}, username {}", currentUser.getId(), currentUser.getUsername());
 
         var purchase = Purchase.builder()
             .purchaseDate(purchaseRequest.getPurchaseDate())
@@ -86,14 +71,11 @@ public class PurchaseServiceImpl implements PurchaseService {
             .quantity(purchaseRequest.getQuantity())
             .category(purchaseRequest.getCategory())
             .totalCost(purchaseRequest.getCost() * purchaseRequest.getQuantity())
+                .user(currentUser)
             .build();
 
-        purchase.setUser(currentUser);
-
         var purchaseSavedToDB = purchaseRepo.save(purchase);
-
-        log.debug("created purchase {} ", purchaseSavedToDB);
-
+        log.debug("created purchase id {} and category {}", purchaseSavedToDB.getId(), purchaseSavedToDB.getCategory());
         var purchaseDto = new PurchaseDto(purchaseSavedToDB);
 
         notificationService.sendNotificationForCreate(purchaseDto, currentUser.getId());
@@ -102,13 +84,13 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
+    @Transactional
     public PurchaseDto updatePurchase(PurchaseDto purchase, Integer id) {
-        log.debug("PurchaseServiceImpl.updatePurchase() is started");
-        log.debug("request {}, id {} ", purchase, id);
+        log.info("PurchaseServiceImpl.updatePurchase() is started");
+        log.info("purchase id {} ", id);
 
         var currentUser = userService.getCurrentUser();
-        var purchaseFromDB = purchaseRepo.findById(id)
-                .orElseThrow (() -> new ResourceNotFoundException("Purchase",String.valueOf(id)));
+        var purchaseFromDB = findPurchaseById(id);
 
         log.debug("before update {} ", purchaseFromDB);
 
@@ -120,7 +102,6 @@ public class PurchaseServiceImpl implements PurchaseService {
         log.debug("after update {} ", purchaseFromDB);
 
         purchaseRepo.save(purchaseFromDB);
-
         var purchaseDto = new PurchaseDto(purchaseFromDB);
 
         notificationService.sendNotificationForUpdate(purchaseDto, currentUser.getId());
@@ -129,15 +110,24 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
+    @Transactional
     public void deletePurchase(Integer id) {
-        log.debug("PurchaseServiceImpl.deletePurchase() is started");
+        log.info("PurchaseServiceImpl.deletePurchase() is started");
         log.debug("Purchase to be deleted {} ", id);
 
         var currentUser = userService.getCurrentUser();
+        findPurchaseById(id);
 
-        purchaseRepo.findById(id)
-                .orElseThrow (() -> new ResourceNotFoundException("Purchase", String.valueOf(id)));
         notificationService.sendNotificationForDelete(id, currentUser.getId());
         purchaseRepo.deleteById(id);
+    }
+
+    public Purchase findPurchaseById(Integer id) {
+        Purchase purchase = purchaseRepo.findById(id).orElseThrow(() -> {
+            log.error("ResourceNotFoundException {}", id);
+            return new ResourceNotFoundException("Purchase", String.valueOf(id));
+        });
+
+        return purchase;
     }
 }

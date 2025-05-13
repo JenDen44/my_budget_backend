@@ -1,26 +1,24 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.repository;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Purchase;
+import com.melnikov.bulish.my.budget.my_budget_backend.interfaces.PurchaseForTableProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public interface PurchaseRepository extends CrudRepository<Purchase, Integer>, PagingAndSortingRepository<Purchase, Integer> {
 
-    @Query(
-        "SELECT NEW com.melnikov.bulish.my.budget.my_budget_backend.entity.Purchase(p.category, p.cost, p.quantity,"
-        + "  p.purchaseDate)"
-        + " FROM Purchase p WHERE p.purchaseDate BETWEEN ?1 AND ?2 "
-        + "AND user.id = ?3"
-    )
-    List<Purchase> findPurchaseWithTimeBetween(LocalDate startTime, LocalDate endTime, Integer userId);
+    @Query("""
+           SELECT NEW com.melnikov.bulish.my.budget.my_budget_backend.interfaces.PurchaseForTableProjection(p.totalCost, p.category, p.purchaseDate)
+           FROM Purchase p WHERE p.purchaseDate BETWEEN ?1 AND ?2 AND p.user.id = ?3
+           """
+            )
+    List<PurchaseForTableProjection> findPurchaseSummariesByDateRange(LocalDate startDate, LocalDate endDate, Integer userId);
 
-    @Query("SELECT p FROM Purchase p WHERE p.user.id=?1")
-    Page<Purchase> findByUserWithPagination(Integer userId, Pageable pageable);
+    Page<Purchase> findByUserId(Integer userId, Pageable pageable);
 }

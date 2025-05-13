@@ -79,7 +79,7 @@ public class PurchaseController {
     )
     @GetMapping("/{id}")
     public ResponseEntity<PurchaseDto> getPurchase(@PathVariable Integer id) {
-        return ResponseEntity.ok(purchaseService.findPurchaseById(id));
+        return ResponseEntity.ok(purchaseService.findPurchaseDtoById(id));
     }
 
     @Operation(

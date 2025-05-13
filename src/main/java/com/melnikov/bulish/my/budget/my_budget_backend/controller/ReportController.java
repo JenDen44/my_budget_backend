@@ -1,6 +1,5 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.controller;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportChart;
 import com.melnikov.bulish.my.budget.my_budget_backend.service.ReportService;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportTable;
@@ -8,7 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,14 +17,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/reports")
 @Tag(name = "Reports")
+@RequiredArgsConstructor
 public class ReportController {
 
     private final ReportService reportService;
-
-    @Autowired
-    public ReportController(ReportService reportService) {
-        this.reportService = reportService;
-    }
 
     @Operation(
         description = "Endpoint for get report table",

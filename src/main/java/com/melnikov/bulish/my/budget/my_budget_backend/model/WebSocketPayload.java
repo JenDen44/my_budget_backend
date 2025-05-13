@@ -2,19 +2,19 @@ package com.melnikov.bulish.my.budget.my_budget_backend.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.socket.TextMessage;
 
-@Slf4j
-@Data
-public class WebSocketPayload<TData extends Object> {
+import java.io.Serializable;
 
-    private static final ObjectMapper mapper = JsonMapper.builder()
-        .addModule(new JavaTimeModule())
-        .build();
+@Slf4j
+@Getter
+public class WebSocketPayload<TData extends Object> implements Serializable {
+
+    @Autowired
+    private ObjectMapper mapper;
 
     private TData data;
 
@@ -25,11 +25,9 @@ public class WebSocketPayload<TData extends Object> {
     @Override
     public String toString() {
         try {
-            return mapper.writer().writeValueAsString(this.data);
+            return mapper.writer().writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            log.error(e.toString());
-            e.printStackTrace();
-
+            log.error("Failed to serialize WebSocketPayload: {}", e.getMessage());
             return "Invalid WebSocketPayload";
         }
     }

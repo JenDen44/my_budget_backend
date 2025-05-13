@@ -4,18 +4,16 @@ import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseDto;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.CreatePurchaseNotification;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.DeletePurchaseNotification;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.UpdatePurchaseNotification;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 @Slf4j
-@Component
+@Service
+@RequiredArgsConstructor
 public class PurchaseNotificationService {
 
     private final WebSocketSessionService sessionService;
-
-    public PurchaseNotificationService(WebSocketSessionService sessionService) {
-        this.sessionService = sessionService;
-    }
 
     public void sendNotificationForDelete(Integer purchaseId, Integer userId) {
         log.info("sendNotificationForDelete purchase id {}, user id {} ", purchaseId, userId);

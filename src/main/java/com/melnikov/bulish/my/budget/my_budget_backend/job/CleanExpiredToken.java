@@ -15,6 +15,6 @@ public class CleanExpiredToken {
 
     @Scheduled(fixedRateString = "${token.clean_up}")
     public void cleanAllExpiredTokens() {
-        tokenRepo.cleanAllExpiredToken();
+        tokenRepo.deleteByExpiredTrueOrRevokedTrue();
     }
 }

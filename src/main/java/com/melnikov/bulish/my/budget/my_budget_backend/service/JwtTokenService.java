@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.exception.ValidationException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -29,6 +30,9 @@ public class JwtTokenService {
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
 
+    private static final String AUTH_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -52,11 +56,7 @@ public class JwtTokenService {
         return buildToken(new HashMap<>(), userDetails, refreshExpiration);
     }
 
-    private String buildToken(
-        Map<String, Object> extraClaims,
-        UserDetails userDetails,
-        long expiration
-    ) {
+    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
         return Jwts
             .builder()
             .setClaims(extraClaims)
@@ -82,17 +82,22 @@ public class JwtTokenService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts
-            .parserBuilder()
-            .setSigningKey(getSignInKey())
-            .build()
-            .parseClaimsJws(token)
-            .getBody();
+        try {
+            return Jwts
+                .parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        } catch (JwtException e) {
+            log.error("Invalid JWT token: {}", e.getMessage());
+            throw new ValidationException("Token", e.getMessage());
+        }
     }
     public String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
+        String bearerToken = request.getHeader(AUTH_HEADER);
 
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
             return bearerToken.substring(7);
         }
         return null;
