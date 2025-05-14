@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.controller;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.model.PagedResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseDto;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseRequest;
 import com.melnikov.bulish.my.budget.my_budget_backend.service.PurchaseServiceImpl;
@@ -12,8 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/purchases")
@@ -46,7 +45,7 @@ public class PurchaseController {
         }
     )
     @GetMapping
-    public List<PurchaseDto> getPurchasePage(
+    public PagedResponse<PurchaseDto> getPurchasePage(
         @RequestParam(value = "pageNo", defaultValue = PaginationConstants.DEFAULT_PAGE_NUMBER, required = false) int pageNo,
         @RequestParam(value = "pageSize", defaultValue = PaginationConstants.DEFAULT_PAGE_SIZE, required = false) int pageSize,
         @RequestParam(value = "sortBy", defaultValue = PaginationConstants.DEFAULT_SORT_BY, required = false) String sortBy,

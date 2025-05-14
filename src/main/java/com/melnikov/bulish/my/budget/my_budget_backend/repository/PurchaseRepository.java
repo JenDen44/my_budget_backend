@@ -14,10 +14,10 @@ import java.util.List;
 public interface PurchaseRepository extends CrudRepository<Purchase, Integer>, PagingAndSortingRepository<Purchase, Integer> {
 
     @Query("""
-           SELECT NEW com.melnikov.bulish.my.budget.my_budget_backend.interfaces.PurchaseForTableProjection(p.totalCost, p.category, p.purchaseDate)
-           FROM Purchase p WHERE p.purchaseDate BETWEEN ?1 AND ?2 AND p.user.id = ?3
-           """
-            )
+    SELECT p.totalCost as totalCost, p.category as category, p.purchaseDate as purchaseDate
+    FROM Purchase p
+    WHERE p.purchaseDate BETWEEN ?1 AND ?2 AND p.user.id = ?3
+    """)
     List<PurchaseForTableProjection> findPurchaseSummariesByDateRange(LocalDate startDate, LocalDate endDate, Integer userId);
 
     Page<Purchase> findByUserId(Integer userId, Pageable pageable);

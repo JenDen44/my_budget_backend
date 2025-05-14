@@ -2,6 +2,7 @@ package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Purchase;
 import com.melnikov.bulish.my.budget.my_budget_backend.exception.ResourceNotFoundException;
+import com.melnikov.bulish.my.budget.my_budget_backend.model.PagedResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseDto;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseRequest;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.PurchaseRepository;
@@ -12,7 +13,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,9 +34,8 @@ public class PurchaseServiceImpl implements PurchaseService {
         return new PurchaseDto(purchase);
     }
 
-    public List<PurchaseDto> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir) {
-        log.info("PurchaseServiceImpl.getPurchasesForCurrentUser() pageNo {}, pageSize {}, sortBy {}, sortDir {}",
-            pageNo, pageSize, sortBy, sortDir);
+    public PagedResponse<PurchaseDto> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir) {
+        log.info("PurchaseServiceImpl.getPurchasesForCurrentUser() pageNo {}, pageSize {}, sortBy {}, sortDir {}", pageNo, pageSize, sortBy, sortDir);
 
         var currentUser = userService.getCurrentUser();
         log.debug("Current user id {}, username {}", currentUser.getId(), currentUser.getUsername());
@@ -50,11 +49,19 @@ public class PurchaseServiceImpl implements PurchaseService {
         log.info("purchases list from DB is empty ? {} ", purchasesByCurrentUser.isEmpty());
         log.debug("{}", purchasesByCurrentUser.getContent());
 
-        return purchasesByCurrentUser
-            .getContent()
-            .stream()
-            .map(PurchaseDto::new)
-            .collect(Collectors.toList());
+        var purchaseDtoList = purchasesByCurrentUser
+                .stream()
+                .map(PurchaseDto::new)
+                .collect(Collectors.toList());
+
+        final var pagedResponse = new PagedResponse<PurchaseDto>(
+                purchaseDtoList,
+                pageNo,
+                pageSize,
+                purchasesByCurrentUser.getTotalElements(),
+                purchasesByCurrentUser.getTotalPages());
+
+        return pagedResponse;
     }
 
     @Override

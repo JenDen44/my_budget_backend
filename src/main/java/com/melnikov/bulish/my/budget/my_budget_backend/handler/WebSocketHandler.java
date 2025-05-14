@@ -22,11 +22,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
     private final JwtTokenService jwtTokenService;
     private TimerTask task = null;
 
-    public WebSocketHandler(
-        WebSocketSessionService sessionService,
-        UserServiceImpl userService,
-        JwtTokenService jwtTokenService
-    ) {
+    public WebSocketHandler(WebSocketSessionService sessionService, UserServiceImpl userService, JwtTokenService jwtTokenService) {
         this.sessionService = sessionService;
         this.userService = userService;
         this.jwtTokenService = jwtTokenService;
@@ -38,18 +34,14 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
         if (username == null) {
             session.close();
-
             return;
         }
-
         var user = userService.findByUserName(username);
 
         if (user == null) {
             session.close();
-
             return;
         }
-
         sessionService.addSession(session, user.getId());
 
         if (task != null) {

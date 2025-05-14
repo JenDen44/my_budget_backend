@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.filter;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.constants.JWTConstants;
 import com.melnikov.bulish.my.budget.my_budget_backend.service.JwtTokenService;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.TokenRepository;
 import jakarta.servlet.FilterChain;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Set;
 
 @Component
 public class JwtTokenFilter extends OncePerRequestFilter {
@@ -25,32 +27,22 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsService userDetailsService;
 
-    @Autowired
-    private TokenRepository tokenRepo;
-
     @Override
-    protected void doFilterInternal(
-        @NonNull HttpServletRequest request,
-        @NonNull HttpServletResponse response,
-        @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
-        var authHeader = request.getHeader("Authorization");
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
+            throws ServletException, IOException {
+        var authHeader = request.getHeader(JWTConstants.AUTH_HEADER);
 
-        if (authHeader == null ||!authHeader.startsWith("Bearer")) {
+        if (authHeader == null ||!authHeader.startsWith(JWTConstants.BEARER_PREFIX)) {
             filterChain.doFilter(request, response);
-
             return;
         }
-
         var jwt = authHeader.substring(7);
         var userEmail = jwtTokenService.extractUsername(jwt);
 
         if (userEmail == null || SecurityContextHolder.getContext().getAuthentication() != null) {
             filterChain.doFilter(request, response);
-
             return;
         }
-
         var userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
         if (jwtTokenService.isTokenValid(jwt, userDetails)) {
@@ -65,5 +57,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return Set.of("/register", "/login", "/refresh").contains(request.getServletPath());
     }
 }

@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.constants.JWTConstants;
 import com.melnikov.bulish.my.budget.my_budget_backend.exception.ValidationException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -29,10 +30,6 @@ public class JwtTokenService {
 
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
-
-    private static final String AUTH_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
-
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -95,9 +92,9 @@ public class JwtTokenService {
         }
     }
     public String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTH_HEADER);
+        String bearerToken = request.getHeader(JWTConstants.AUTH_HEADER);
 
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(JWTConstants.BEARER_PREFIX)) {
             return bearerToken.substring(7);
         }
         return null;
