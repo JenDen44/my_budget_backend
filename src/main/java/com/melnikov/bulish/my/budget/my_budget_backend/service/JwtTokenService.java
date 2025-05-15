@@ -5,7 +5,6 @@ import com.melnikov.bulish.my.budget.my_budget_backend.exception.ValidationExcep
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -91,11 +90,10 @@ public class JwtTokenService {
             throw new ValidationException("Token", e.getMessage());
         }
     }
-    public String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(JWTConstants.AUTH_HEADER);
+    public String resolveToken(String authorizationHeader) {
 
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(JWTConstants.BEARER_PREFIX)) {
-            return bearerToken.substring(7);
+        if (StringUtils.hasText(authorizationHeader) && authorizationHeader.startsWith(JWTConstants.BEARER_PREFIX)) {
+            return authorizationHeader.substring(7);
         }
         return null;
     }

@@ -3,6 +3,7 @@ package com.melnikov.bulish.my.budget.my_budget_backend.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.UserDto;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.*;
@@ -13,6 +14,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "users")
 @Data
@@ -27,7 +29,7 @@ public class User extends AbstractEntity implements UserDetails {
     private String password;
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     private List<Token> tokens;
 
     @ToString.Exclude

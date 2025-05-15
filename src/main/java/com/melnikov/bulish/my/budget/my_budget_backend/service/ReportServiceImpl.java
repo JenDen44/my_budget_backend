@@ -1,7 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.enums.Category;
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.ValidationException;
 import com.melnikov.bulish.my.budget.my_budget_backend.interfaces.PurchaseForTableProjection;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportChart;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportTable;
@@ -11,8 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,7 +21,7 @@ public  class ReportServiceImpl implements ReportService {
     private final PurchaseRepository purchaseRepository;
     private final UserServiceImpl userService;
 
-    public List<ReportTable> getTableReportItemsByDate(String startDate, String endDate) {
+    public List<ReportTable> getTableReportItemsByDate(LocalDate startDate, LocalDate endDate) {
         log.info("ReportService.getTableReportItemsByDate() started");
         var purchases = getPurchasesWithinDateRange(startDate, endDate);
 
@@ -41,7 +38,7 @@ public  class ReportServiceImpl implements ReportService {
                  .collect(Collectors.toList()));
     }
 
-    public List<ReportChart> getChartReportItemsByDate(String startDate, String endDate) {
+    public List<ReportChart> getChartReportItemsByDate(LocalDate startDate, LocalDate endDate) {
         log.info("ReportService.getChartReportItemsByDate() started");
         var purchases = getPurchasesWithinDateRange(startDate, endDate);
 
@@ -56,27 +53,13 @@ public  class ReportServiceImpl implements ReportService {
                 .collect(Collectors.toList()));
     }
 
-    private LocalDate parseDate(String date) {
-        return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-M-d"));
-    }
-
-    private List<PurchaseForTableProjection> getPurchasesWithinDateRange(String startDate, String endDate) {
+    private List<PurchaseForTableProjection> getPurchasesWithinDateRange(LocalDate startDate, LocalDate endDate) {
         log.info("startDate {} and endDate {}", startDate, endDate);
-        LocalDate startTime;
-        LocalDate endTime;
-
-        try {
-            startTime = parseDate(startDate);
-            endTime = parseDate(endDate);
-        } catch (DateTimeParseException e) {
-            log.error("Invalid date format: {}, {}", startDate, endDate);
-            throw new ValidationException("Report", e.getMessage());
-        }
 
         var currentUser = userService.getCurrentUser();
         log.debug("current user id {}, username {}", currentUser.getId(), currentUser.getUsername());
 
-        var purchases = purchaseRepository.findPurchaseSummariesByDateRange(startTime, endTime, currentUser.getId());
+        var purchases = purchaseRepository.findPurchaseSummariesByDateRange(startDate, endDate, currentUser.getId());
         log.debug("purchases count between startDate {} and end date {}, {} ", startDate, endDate, purchases.size());
 
         return purchases;

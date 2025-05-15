@@ -8,7 +8,6 @@ import com.melnikov.bulish.my.budget.my_budget_backend.model.AuthenticationReque
 import com.melnikov.bulish.my.budget.my_budget_backend.model.AuthenticationResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.TokenRepository;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -89,10 +88,10 @@ public class AuthenticationService {
         tokenRepository.saveAll(validUserTokens);
     }
 
-    public AuthenticationResponse refreshToken(HttpServletRequest request) {
+    public AuthenticationResponse refreshToken(String authorizationHeader) {
         log.info("AuthenticationService.refreshToken() is started");
 
-        var refreshToken = jwtService.resolveToken(request);
+        var refreshToken = jwtService.resolveToken(authorizationHeader);
         var userEmail = jwtService.extractUsername(refreshToken);
 
         if (userEmail == null) {

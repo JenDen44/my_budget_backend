@@ -7,8 +7,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -18,29 +20,56 @@ public class ReportControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private static final String URL_REPORT_TABLE = "/reports/table";
+    private static final String URL_REPORT_CHART = "/reports/chart";
+
+    private static final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-M-d");
+
     @Test
     @WithMockUser(username = "test", password = "test")
     public void findTableReportItemsByDate() throws Exception {
-        var startDate = "2014-09-01";
-        var endDate = "2027-09-30";
-        var requestURL = "/reports/table";
+        var startDate = timeFormatter.format(LocalDate.now().minusDays(2));
+        var endDate = timeFormatter.format(LocalDate.now());
 
-         mockMvc.perform(get(requestURL)
-             .param("startDate",startDate)
-             .param("endDate",endDate))
-             .andExpect(status().isOk()).andDo(print());
+         mockMvc.perform(get(URL_REPORT_TABLE)
+             .param("startDate", startDate)
+             .param("endDate", endDate))
+             .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "test", password = "test")
+    public void findTableReportItemsByDateBadRequest() throws Exception {
+        var startDate = timeFormatter.format(LocalDate.now().minusDays(2));
+        var endDate = "invalid-date";
+
+        mockMvc.perform(get(URL_REPORT_TABLE)
+                        .param("startDate", startDate)
+                        .param("endDate", endDate))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @WithMockUser(username = "test", password = "test")
     public void findChartReportItemsByDate() throws Exception {
-        var startDate = "2014-09-01";
-        var endDate = "2027-09-30";
-        var requestURL = "/reports/chart";
+        var startDate = timeFormatter.format(LocalDate.now().minusDays(2));
+        var endDate = timeFormatter.format(LocalDate.now());
 
-        mockMvc.perform(get(requestURL)
+        mockMvc.perform(get(URL_REPORT_CHART)
             .param("startDate",startDate)
             .param("endDate",endDate))
-            .andExpect(status().isOk()).andDo(print());
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "test", password = "test")
+    public void findChartReportItemsByDateBadRequest() throws Exception {
+        var startDate = timeFormatter.format(LocalDate.now().minusDays(2));
+        var endDate = "invalid-date";
+
+        mockMvc.perform(get(URL_REPORT_CHART)
+                        .param("startDate",startDate)
+                        .param("endDate",endDate))
+                .andExpect(status().isBadRequest());
     }
 }
