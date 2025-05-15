@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,11 +43,11 @@ public class ReportController {
         }
     )
     @GetMapping("table")
-    public ResponseEntity<List<ReportTable>> getTableReportDataByDatePeriod(
+    public List<ReportTable> getTableReportDataByDatePeriod(
             @RequestParam("startDate") @NotNull @DateTimeFormat(pattern="yyyy-M-d") LocalDate startDate,
             @RequestParam("endDate") @NotNull @DateTimeFormat(pattern="yyyy-M-d")  LocalDate endDate
     ) {
-        return ResponseEntity.ok(reportService.getTableReportItemsByDate(startDate,endDate));
+        return reportService.getTableReportItemsByDate(startDate,endDate);
     }
 
     @Operation(
@@ -70,10 +69,10 @@ public class ReportController {
         }
     )
     @GetMapping("chart")
-    public ResponseEntity<List<ReportChart>> getChartReportDataByDatePeriod(
+    public List<ReportChart> getChartReportDataByDatePeriod(
             @RequestParam("startDate") @NotNull @DateTimeFormat(pattern="yyyy-M-d") LocalDate startDate,
             @RequestParam("endDate") @NotNull @DateTimeFormat(pattern="yyyy-M-d") LocalDate endDate
     ) {
-        return ResponseEntity.ok(reportService.getChartReportItemsByDate(startDate,endDate));
+        return reportService.getChartReportItemsByDate(startDate,endDate);
     }
 }

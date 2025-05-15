@@ -1,5 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.model.PagedResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseDto;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseRequest;
 
@@ -12,4 +13,6 @@ public interface PurchaseService {
     PurchaseDto updatePurchase(PurchaseDto purchase, Integer id);
 
     void deletePurchase(Integer id);
+
+    PagedResponse<PurchaseDto> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir);
 }

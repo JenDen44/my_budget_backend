@@ -10,6 +10,7 @@ import java.util.List;
         description = "Schema to send content with pagination info"
 )
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

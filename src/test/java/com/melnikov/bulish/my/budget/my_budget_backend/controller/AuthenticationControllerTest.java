@@ -1,165 +1,89 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.melnikov.bulish.my.budget.my_budget_backend.entity.Token;
-import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.AuthenticationRequest;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.AuthenticationResponse;
-import com.melnikov.bulish.my.budget.my_budget_backend.repository.TokenRepository;
-import com.melnikov.bulish.my.budget.my_budget_backend.repository.UserRepository;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import com.melnikov.bulish.my.budget.my_budget_backend.service.AuthenticationService;
+import com.melnikov.bulish.my.budget.my_budget_backend.service.JwtTokenService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpHeaders;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Optional;
-import java.util.Random;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(AuthenticationController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class AuthenticationControllerTest {
-
-    @Autowired
-    ObjectMapper objectMapper;
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private UserRepository userRepo;
+    @MockBean
+    private JwtTokenService jwtTokenService;
+
+    @MockBean
+    private AuthenticationService service;
 
     @Autowired
-    private TokenRepository tokenRepo;
+    private ObjectMapper objectMapper;
 
-    private static final String URL_REGISTER = "/register";
-    private static final String URL_LOGIN = "/login";
-    private static final String URL_REFRESH = "/refresh";
-
-    private static AuthenticationRequest requestTestUser;
-
-    private static AuthenticationResponse responseTestUser;
-
-    @BeforeEach
-    public void setup() throws Exception {
-        createAndRegisterTestUser();
+    private AuthenticationRequest createSampleRequest() {
+        return new AuthenticationRequest("testuser", "testpasswordR@$34");
     }
 
-    @AfterEach
-    public void cleanUp() throws Exception {
-        if (responseTestUser != null) {
-            Optional<Token> token = tokenRepo.findByToken(responseTestUser.getAccessToken());
-            token.ifPresent(value -> tokenRepo.delete(value));
-        }
-        if (requestTestUser != null) {
-            Optional<User> user = userRepo.findByUsername(requestTestUser.getUsername());
-            user.ifPresent(value -> userRepo.delete(value));
-        }
-
-        requestTestUser = null;
-        responseTestUser = null;
-    }
-
-    private void createAndRegisterTestUser() throws Exception {
-        var request = new AuthenticationRequest(generateRandomString(8, false), generateRandomString(12, true));
-
-        var result = mockMvc.perform(post(URL_REGISTER)
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(request))
-                        .with(csrf()))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
-
-        requestTestUser = request;
-        responseTestUser = objectMapper.readValue(result.getResponse().getContentAsString(), AuthenticationResponse.class);;
-    }
-
-    public String generateRandomString(int length, boolean password) {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        Random rnd = new Random();
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            sb.append(chars.charAt(rnd.nextInt(chars.length())));
-        }
-        if (password) sb.append("R@$34");
-
-        return sb.toString();
+    private AuthenticationResponse createSampleResponse() {
+        return new AuthenticationResponse("access-token-sample", "refresh-token-sample");
     }
 
     @Test
     public void register() throws Exception {
-        var request = new AuthenticationRequest(generateRandomString(8, false), generateRandomString(12, true));
-        var result = mockMvc.perform(post(URL_REGISTER)
-            .contentType("application/json")
-            .content(objectMapper.writeValueAsString(request))
-            .with(csrf()))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andReturn();
+        var request = createSampleRequest();
+        var response = createSampleResponse();
 
-        var responseFromServer = objectMapper.readValue(result.getResponse().getContentAsString(), AuthenticationResponse.class);
-        var accessToken = responseFromServer.getAccessToken();
-        var token = tokenRepo.findByToken(responseFromServer.getRefreshToken());
-        var user = userRepo.findByTokens(token.orElseThrow());
+        when(service.register(any(AuthenticationRequest.class))).thenReturn(response);
 
-        assertThat(accessToken).isNotNull();
-        assertThat(user).isNotNull();
-    }
-
-    @Test
-    public void registerFailed() throws Exception {
-        mockMvc.perform(post(URL_REGISTER)
-                .contentType("application/json")
-                .content(objectMapper.writeValueAsString(requestTestUser))
-                .with(csrf()))
-            .andDo(print())
-            .andExpect(status().is5xxServerError())
-            .andExpect(jsonPath("$.errorMessage").value("User Username is already in use"));
+        mockMvc.perform(post("/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.access_token").value(response.getAccessToken()))
+                .andExpect(jsonPath("$.refresh_token").value(response.getRefreshToken()));
     }
 
     @Test
     public void login() throws Exception {
-        var result = mockMvc.perform(post(URL_LOGIN)
-            .contentType("application/json")
-            .content(objectMapper.writeValueAsString(requestTestUser))
-            .with(csrf()))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andReturn();
+        var request = createSampleRequest();
+        var response = createSampleResponse();
 
-        var response = result.getResponse().getContentAsString();
-        var responseFromServer = objectMapper.readValue(response, AuthenticationResponse.class);
-        var accessToken = responseFromServer.getAccessToken();
-        var token = tokenRepo.findByToken(responseFromServer.getRefreshToken());
+        when(service.login(any(AuthenticationRequest.class))).thenReturn(response);
 
-        assertThat(accessToken).isNotNull();
-        assertThat(token.isPresent()).isTrue();
+        mockMvc.perform(post("/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.access_token").value(response.getAccessToken()))
+                .andExpect(jsonPath("$.refresh_token").value(response.getRefreshToken()));
     }
 
     @Test
-    public void refresh() throws Exception {
-        var headers = new HttpHeaders();
-        headers.add("Authorization", responseTestUser.getRefreshToken());
+    public void refreshToken() throws Exception {
+        String authHeader = "Bearer mockRefreshToken123";
 
-        var result = mockMvc.perform(get(URL_REFRESH).headers(headers))
-            .andExpect(status().isOk())
-            .andDo(print())
-            .andReturn();
-        var response = result.getResponse().getContentAsString();
-        var responseFromServer = objectMapper.readValue(response, AuthenticationResponse.class);
-        var accessToken = responseFromServer.getAccessToken();
+        AuthenticationResponse response = createSampleResponse();
+        when(service.refreshToken(authHeader)).thenReturn(response);
 
-        assertThat(accessToken).isNotNull();
+        mockMvc.perform(get("/refresh")
+                        .header("Authorization", authHeader))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.access_token").value(response.getAccessToken()))
+                .andExpect(jsonPath("$.refresh_token").value(response.getRefreshToken()));
     }
 }

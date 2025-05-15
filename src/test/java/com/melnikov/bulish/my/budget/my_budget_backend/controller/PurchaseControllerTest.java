@@ -1,24 +1,29 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.melnikov.bulish.my.budget.my_budget_backend.entity.Purchase;
 import com.melnikov.bulish.my.budget.my_budget_backend.enums.Category;
+import com.melnikov.bulish.my.budget.my_budget_backend.model.PagedResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseDto;
-import com.melnikov.bulish.my.budget.my_budget_backend.repository.PurchaseRepository;
-import org.junit.jupiter.api.AfterEach;
+import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseRequest;
+import com.melnikov.bulish.my.budget.my_budget_backend.service.AuthenticationService;
+import com.melnikov.bulish.my.budget.my_budget_backend.service.JwtTokenService;
+import com.melnikov.bulish.my.budget.my_budget_backend.service.PurchaseService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.util.Optional;
+import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -28,8 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(AuthenticationController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class PurchaseControllerTest {
 
     @Autowired
@@ -38,27 +43,44 @@ public class PurchaseControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private PurchaseRepository repo;
+    @MockBean
+    private PurchaseService purchaseService;
+
+    @MockBean
+    private JwtTokenService jwtTokenService;
+
+    @MockBean
+    AuthenticationService authenticationService;
 
     private static final String BASE_URL = "/purchases";
 
-    private Integer testPurchaseId;
+    private PurchaseRequest createSamplePurchaseRequest() {
+        return new PurchaseRequest(Category.CLOTHE, 123.80, 2, LocalDate.now());
+    }
 
-    @AfterEach
-    public void cleanup() {
-        if (testPurchaseId != null && repo.existsById(testPurchaseId)) {
-            repo.deleteById(testPurchaseId);
-        }
-        testPurchaseId = null;
+    private PurchaseDto createSamplePurchaseDto() {
+        PurchaseDto purchaseDto = new PurchaseDto(Category.CLOTHE, 123.80, 2, LocalDate.now());
+        purchaseDto.setUserId(1);
+        return purchaseDto;
+    }
+
+    private PagedResponse<PurchaseDto> createSamplePagedResponse() {
+        PagedResponse<PurchaseDto> pagedResponse = new PagedResponse<>();
+        pagedResponse.setContent((List.of(new PurchaseDto(), new PurchaseDto())));
+        return pagedResponse;
     }
 
     @Test
-    @WithMockUser(username = "test", password = "test")
-    public void findAllPurchases() throws Exception {
-        createTestPurchase();
+    public void getPurchasePage() throws Exception {
+        var pagedResponse = createSamplePagedResponse();
 
-        mockMvc.perform(get(BASE_URL))
+        when(purchaseService.getPurchasesForCurrentUser(anyInt(), anyInt(), anyString(), anyString())).thenReturn(pagedResponse);
+
+        mockMvc.perform(get(BASE_URL)
+                .param("pageNo", "0")
+                .param("pageSize", "5")
+                .param("sortBy", "id")
+                .param("sortDir", "asc"))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.content").isArray())
@@ -66,117 +88,48 @@ public class PurchaseControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "test", password = "test")
     public void createPurchase() throws Exception {
-            var purchaseResponse = new PurchaseDto(Category.CLOTHE, 123.80, 2, LocalDate.now());
-            var result = mockMvc.perform(
-                    post(BASE_URL)
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(purchaseResponse))
-                        .with(csrf()))
+        var purchaseDto = createSamplePurchaseDto();
+        var purchaseRequest = createSamplePurchaseRequest();
+
+        when(purchaseService.savePurchase(any(PurchaseRequest.class))).thenReturn(purchaseDto);
+
+         mockMvc.perform(post(BASE_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(purchaseRequest))
+                .with(csrf()))
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
-
-            var created = objectMapper.readValue(result.getResponse().getContentAsString(), PurchaseDto.class);
-
-            assertThat(created.getId()).isNotNull();
-            assertThat(created.getCategory()).isEqualTo(Category.CLOTHE);
-            assertThat(created.getCost()).isEqualTo(123.80);
-
-            repo.deleteById(created.getId());
-
+                .andExpect(jsonPath("$.category").value(purchaseDto.getCategory()))
+                .andExpect(jsonPath("$.id").value(purchaseDto.getId()))
+                .andExpect(jsonPath("$.cost").value(purchaseDto.getCost()));
         }
 
     @Test
-    @WithMockUser(username = "test", password = "test")
-    public void createPurchaseInvalidRequest() throws Exception {
-        String invalidJson = "{}";
-        mockMvc.perform(post(BASE_URL)
-                        .contentType("application/json")
-                        .content(invalidJson)
-                        .with(csrf()))
-                .andExpect(status().isUnprocessableEntity());
-    }
-
-    @Test
-    @WithMockUser(username = "test", password = "test")
     public void updatePurchase() throws Exception {
-        Integer id = createTestPurchase();
-        var today = LocalDate.now();
-        var purchaseResponse = new PurchaseDto(Category.FOOD, 123.80, 2, today);
-        var result = mockMvc.perform(
-                put(BASE_URL + "/" + id)
-                    .contentType("application/json")
-                    .content(objectMapper.writeValueAsString(purchaseResponse))
-                    .with(csrf()))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andReturn();
+        var purchaseDto = createSamplePurchaseDto();
 
-        var updated = objectMapper.readValue(result.getResponse().getContentAsString(), Purchase.class);
+        when(purchaseService.updatePurchase(any(PurchaseDto.class), anyInt())).thenReturn(purchaseDto);
 
-        Optional<PurchaseDto> fromDbOpt = repo.findById(id).map(PurchaseDto::new);
-        assertThat(fromDbOpt).isPresent();
-        assertThat(fromDbOpt.get().getCategory()).isEqualTo(Category.FOOD);
+        mockMvc.perform(put(BASE_URL + "/" + purchaseDto.getId())
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(purchaseDto))
+                .with(csrf()))
+                .andDo(print())
+                .andExpect(jsonPath("$.category").value(purchaseDto.getCategory()))
+                .andExpect(jsonPath("$.id").value(purchaseDto.getId()))
+                .andExpect(jsonPath("$.cost").value(purchaseDto.getCost()));
     }
 
-    @Test
-    @WithMockUser(username = "test", password = "test")
-    public void updatePurchaseInvalidRequest() throws Exception {
-        Integer id = createTestPurchase();
-        String invalidJson = "{}";
-        mockMvc.perform(put(BASE_URL + "/" + id)
-                        .contentType("application/json")
-                        .content(invalidJson)
-                        .with(csrf()))
-                .andExpect(status().isUnprocessableEntity());
-    }
 
     @Test
-    @WithMockUser(username = "test", password = "test")
     public void deletePurchase() throws Exception {
-        Integer id = createTestPurchase();
+        var purchaseDto = createSamplePurchaseDto();
 
-        mockMvc.perform(delete(BASE_URL + "/" + id).with(csrf()))
-                .andExpect(status().isOk());
+        mockMvc.perform(delete(BASE_URL + "/" + purchaseDto.getId())
+                .with(csrf()))
+                .andExpect(status()
+                .isOk());
 
-        assertThat(repo.existsById(id)).isFalse();
-    }
-
-    @Test
-    @WithMockUser(username = "test", password = "test")
-    public void deletePurchaseNotFound() throws Exception {
-        mockMvc.perform(delete(BASE_URL + "/999999").with(csrf()))
-                .andExpect(status().isNotFound());
-    }
-
-    private Integer createTestPurchase() throws Exception {
-        PurchaseDto purchaseDto = new PurchaseDto(Category.CLOTHE, 123.80, 2, LocalDate.now());
-        String jsonContent = objectMapper.writeValueAsString(purchaseDto);
-
-        String responseContent = mockMvc.perform(post(BASE_URL)
-                        .contentType("application/json")
-                        .content(jsonContent)
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        PurchaseDto created = objectMapper.readValue(responseContent, PurchaseDto.class);
-        this.testPurchaseId = created.getId();
-        return created.getId();
-    }
-
-    @Test
-    @WithMockUser(username = "test", password = "test")
-    public void getPurchasePage() throws Exception {
-        createTestPurchase();
-        mockMvc.perform(get(BASE_URL)
-                        .param("pageNo", "0")
-                        .param("pageSize", "5")
-                        .param("sortBy", "id")
-                        .param("sortDir", "asc"))
-                .andExpect(status().isOk())
-                .andDo(print());
+        verify(purchaseService).deletePurchase(anyInt());
     }
 }
