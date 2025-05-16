@@ -24,8 +24,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,13 +42,26 @@ class PurchaseServiceImplTest {
     private PurchaseServiceImpl service;
 
     private User currentUser;
+    private Purchase p1 = null;
+    private Purchase p2 = null;
+    private PurchaseDto dto = null;
 
 
     @BeforeEach
     void setup() {
-        currentUser = new User();
-        currentUser.setId(1);
-        currentUser.setUsername("testuser");
+        dto = new PurchaseDto(null, 100.00, 3, LocalDate.now());
+        p1 = new Purchase(1, 100.00, 2, currentUser);
+        p2 = new Purchase(2, 100.00, 2, currentUser);
+        currentUser = new User(1, "testuser");
+    }
+
+    private PurchaseRequest createSamplePurchaseRequest() {
+        PurchaseRequest req = new PurchaseRequest();
+        req.setCost(50.00);
+        req.setQuantity(2);
+        req.setCategory(null);
+        req.setPurchaseDate(LocalDate.now());
+        return req;
     }
 
     @Test
@@ -73,12 +85,6 @@ class PurchaseServiceImplTest {
 
     @Test
     void getPurchasesForCurrentUserPage() {
-        Purchase p1 = new Purchase();
-        p1.setId(1);
-        p1.setUser(currentUser);
-        Purchase p2 = new Purchase();
-        p2.setId(2);
-        p2.setUser(currentUser);
         List<Purchase> list = Arrays.asList(p1, p2);
 
         Page<Purchase> page = new PageImpl<>(list);
@@ -93,20 +99,10 @@ class PurchaseServiceImplTest {
 
     @Test
     void savePurchase() {
-        PurchaseRequest req = new PurchaseRequest();
-        req.setCost(50.00);
-        req.setQuantity(2);
-        req.setCategory(null);
-        req.setPurchaseDate(LocalDate.now());
+        PurchaseRequest req = createSamplePurchaseRequest();
 
-        Purchase saved = new Purchase();
-        saved.setId(1);
-        saved.setCost(req.getCost());
-        saved.setQuantity(req.getQuantity());
-        saved.setTotalCost(req.getCost() * req.getQuantity());
-        saved.setUser(currentUser);
         when(userService.getCurrentUser()).thenReturn(currentUser);
-        when(purchaseRepo.save(any(Purchase.class))).thenReturn(saved);
+        when(purchaseRepo.save(any(Purchase.class))).thenReturn(p2);
 
         PurchaseDto result = service.savePurchase(req);
         assertThat(result).isNotNull();
@@ -116,25 +112,11 @@ class PurchaseServiceImplTest {
 
     @Test
     void updatePurchase() {
-        Purchase existing = new Purchase();
-        existing.setId(1);
-        existing.setCost(10.00);
-        existing.setQuantity(1);
-        existing.setCategory(null);
-        existing.setPurchaseDate(LocalDate.now());
-        existing.setUser(currentUser);
-
         when(userService.getCurrentUser()).thenReturn(currentUser);
-        when(purchaseRepo.findById(1)).thenReturn(Optional.of(existing));
+        when(purchaseRepo.findById(1)).thenReturn(Optional.of(p2));
         when(purchaseRepo.save(any(Purchase.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        PurchaseDto updateDto = new PurchaseDto();
-        updateDto.setCost(100.00);
-        updateDto.setQuantity(3);
-        updateDto.setCategory(null);
-        updateDto.setPurchaseDate(LocalDate.now());
-
-        PurchaseDto result = service.updatePurchase(updateDto, 1);
+        PurchaseDto result = service.updatePurchase(dto, dto.getId());
         assertThat(result).isNotNull();
         assertThat(result.getCost()).isEqualTo(100);
         verify(purchaseRepo).save(any(Purchase.class));
@@ -143,14 +125,11 @@ class PurchaseServiceImplTest {
 
     @Test
     void deletePurchase() {
-        Purchase purchase = new Purchase();
-        purchase.setId(1);
-        purchase.setUser(currentUser);
         when(userService.getCurrentUser()).thenReturn(currentUser);
-        when(purchaseRepo.findById(1)).thenReturn(Optional.of(purchase));
+        when(purchaseRepo.findById(anyInt())).thenReturn(Optional.of(p1));
 
-        service.deletePurchase(1);
-        verify(purchaseRepo).deleteById(1);
-        verify(notificationService).sendNotificationForDelete(1, currentUser.getId());
+        service.deletePurchase(p1.getId());
+        verify(purchaseRepo).deleteById(anyInt());
+        verify(notificationService).sendNotificationForDelete(p1.getId(), currentUser.getId());
     }
 }

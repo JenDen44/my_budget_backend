@@ -62,4 +62,12 @@ public class Purchase extends AbstractEntity {
         this.purchaseDate = purchaseDate;
         this.user = user;
     }
+
+    public Purchase(Integer id, Double cost, Integer quantity, User user) {
+        super(id);
+        this.cost = cost;
+        this.quantity = quantity;
+        this.user = user;
+        this.totalCost = cost * quantity;
+    }
 }

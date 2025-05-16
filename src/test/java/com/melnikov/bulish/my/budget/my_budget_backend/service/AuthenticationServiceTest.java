@@ -40,6 +40,8 @@ class AuthenticationServiceTest {
     private AuthenticationService authService;
 
     private User mockUser;
+    private final String jwt = "jwt_token";
+    private final String refresh = "refresh_token";
 
     @BeforeEach
     void setup() {
@@ -49,27 +51,31 @@ class AuthenticationServiceTest {
         mockUser.setPassword("encodedPassword");
     }
 
+    private AuthenticationRequest createSampleRequest() {
+        return new AuthenticationRequest("testuser", "testpasswordR@$34");
+    }
+
     @Test
     void register() {
-        AuthenticationRequest request = new AuthenticationRequest("newUser", "pass");
+        AuthenticationRequest request = createSampleRequest();
         when(userService.isUserNameUnique(request.getUsername())).thenReturn(true);
-        when(passwordEncoder.encode(request.getPassword())).thenReturn("encodedPassword");
+        when(passwordEncoder.encode(request.getPassword())).thenReturn(mockUser.getPassword());
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(jwtService.generateToken(any(User.class))).thenReturn("jwtToken");
-        when(jwtService.generateRefreshToken(any(User.class))).thenReturn("refreshToken");
+        when(jwtService.generateToken(any(User.class))).thenReturn(jwt);
+        when(jwtService.generateRefreshToken(any(User.class))).thenReturn(refresh);
 
         AuthenticationResponse response = authService.register(request);
 
         assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isEqualTo("jwtToken");
+        assertThat(response.getAccessToken()).isEqualTo(jwt);
         verify(userRepository).save(any(User.class));
         verify(tokenRepository).save(any(Token.class));
     }
 
     @Test
     void registerFailed() {
-        AuthenticationRequest request = new AuthenticationRequest("existingUser", "pass");
-        when(userService.isUserNameUnique("existingUser")).thenReturn(false);
+        AuthenticationRequest request = createSampleRequest();
+        when(userService.isUserNameUnique(anyString())).thenReturn(false);
 
         assertThatThrownBy(() -> authService.register(request))
                 .isInstanceOf(ValidationException.class);
@@ -77,16 +83,16 @@ class AuthenticationServiceTest {
 
     @Test
     void login() {
-        AuthenticationRequest request = new AuthenticationRequest("user", "pass");
+        AuthenticationRequest request = createSampleRequest();
         when(authenticationManager.authenticate(any())).thenReturn(null);
         when(userRepository.findByUsername(request.getUsername())).thenReturn(Optional.of(mockUser));
-        when(jwtService.generateToken(any(User.class))).thenReturn("jwt");
-        when(jwtService.generateRefreshToken(any(User.class))).thenReturn("refresh");
+        when(jwtService.generateToken(any(User.class))).thenReturn(jwt);
+        when(jwtService.generateRefreshToken(any(User.class))).thenReturn(refresh);
 
         AuthenticationResponse response = authService.login(request);
 
         assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isEqualTo("jwt");
+        assertThat(response.getAccessToken()).isEqualTo(jwt);
         verify(authenticationManager).authenticate(any());
         verify(userRepository).findByUsername(request.getUsername());
         verify(tokenRepository).save(any(Token.class));
@@ -94,9 +100,9 @@ class AuthenticationServiceTest {
 
     @Test
     void loginFailed() {
-        AuthenticationRequest request = new AuthenticationRequest("unknown", "pass");
+        AuthenticationRequest request = createSampleRequest();
         when(authenticationManager.authenticate(any())).thenReturn(null);
-        when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(ValidationException.class);
@@ -105,23 +111,23 @@ class AuthenticationServiceTest {
     @Test
     void refreshToken() {
         Token token = new Token();
-        token.setToken("someToken");
+        token.setToken(jwt);
         String authHeader = "Bearer " + token.getToken();
         when(jwtService.resolveToken(authHeader)).thenReturn(token.getToken());
-        when(jwtService.extractUsername(token.getToken())).thenReturn("user");
+        when(jwtService.extractUsername(token.getToken())).thenReturn(mockUser.getUsername());
         when(tokenRepository.findByToken(token.getToken())).thenReturn(Optional.of(token));
         User user = new User();
         user.setId(1);
-        user.setUsername("user");
-        when(userRepository.findByUsername("user")).thenReturn(Optional.of(user));
+        user.setUsername(mockUser.getUsername());
+        when(userRepository.findByUsername(mockUser.getUsername())).thenReturn(Optional.of(user));
         when(jwtService.isTokenValid(anyString(), any(User.class))).thenReturn(true);
-        when(jwtService.generateToken(any(User.class))).thenReturn("newJwt");
-        when(jwtService.generateRefreshToken(any(User.class))).thenReturn("newRefresh");
+        when(jwtService.generateToken(any(User.class))).thenReturn(jwt);
+        when(jwtService.generateRefreshToken(any(User.class))).thenReturn(refresh);
 
         AuthenticationResponse response = authService.refreshToken(authHeader);
 
         assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isEqualTo("newJwt");
+        assertThat(response.getAccessToken()).isEqualTo(jwt);
         verify(tokenRepository).findByToken(token.getToken());
         verify(tokenRepository).save(any(Token.class));
     }
@@ -130,7 +136,7 @@ class AuthenticationServiceTest {
     void refreshTokenFailed() {
         String authHeader = "Bearer invalidToken";
         when(jwtService.resolveToken(authHeader)).thenReturn("invalidToken");
-        when(jwtService.extractUsername("invalidToken")).thenReturn(null);
+        when(jwtService.extractUsername(anyString())).thenReturn(null);
 
         assertThatThrownBy(() -> authService.refreshToken(authHeader))
                 .isInstanceOf(ValidationException.class);

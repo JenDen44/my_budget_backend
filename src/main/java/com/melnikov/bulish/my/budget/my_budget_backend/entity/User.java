@@ -47,6 +47,11 @@ public class User extends AbstractEntity implements UserDetails {
         this.password = userDto.getPassword();
     }
 
+    public User(Integer id, String username) {
+        super(id);
+        this.username = username;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return new HashSet<GrantedAuthority>();

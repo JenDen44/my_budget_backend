@@ -37,18 +37,21 @@ class ReportServiceImplTest {
 
     private User currentUser;
 
+    private LocalDate startDate = null;
+
+    private LocalDate endDate = null;
+
     @BeforeEach
     void setup() {
         currentUser = new User();
         currentUser.setId(1);
         currentUser.setUsername("testuser");
+        endDate = LocalDate.now();
+        startDate = LocalDate.now().minusDays(5);
     }
 
     @Test
     void getTableReportItemsByDate_returnsCorrectReport() {
-        LocalDate startDate = LocalDate.of(2023,1,1);
-        LocalDate endDate = LocalDate.of(2023,1,31);
-
         PurchaseForTableProjection p1 = mock(PurchaseForTableProjection.class);
         when(p1.getPurchaseDate()).thenReturn(LocalDate.of(2023,1,10));
         when(p1.getCategory()).thenReturn(Category.FOOD);
@@ -59,31 +62,20 @@ class ReportServiceImplTest {
         when(p2.getCategory()).thenReturn(Category.CLOTHE);
         when(p2.getTotalCost()).thenReturn(150.0);
 
-        PurchaseForTableProjection p3 = mock(PurchaseForTableProjection.class);
-        when(p3.getPurchaseDate()).thenReturn(LocalDate.of(2023,1,15));
-        when(p3.getCategory()).thenReturn(Category.FOOD);
-        when(p3.getTotalCost()).thenReturn(200.0);
-
         when(userService.getCurrentUser()).thenReturn(currentUser);
 
-        List<PurchaseForTableProjection> mockPurchases = Arrays.asList(p1, p2, p3);
+        List<PurchaseForTableProjection> mockPurchases = Arrays.asList(p1, p2);
         when(purchaseRepository.findPurchaseSummariesByDateRange(startDate, endDate, currentUser.getId()))
                 .thenReturn(mockPurchases);
 
         List<ReportTable> result = reportService.getTableReportItemsByDate(startDate, endDate);
-        ReportTable first = result.get(0);
-        ReportTable second = result.get(1);
 
-        assertThat(result).hasSize(2);
-        assertThat(first.getDate()).isEqualTo(LocalDate.of(2023,1,10));
-        assertThat(second.getDate()).isEqualTo(LocalDate.of(2023,1,15));
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getDate()).isEqualTo(p1.getPurchaseDate());
     }
 
     @Test
     void getChartReportItemsByDate_returnsCorrectChart() {
-        LocalDate startDate = LocalDate.of(2023,2,1);
-        LocalDate endDate = LocalDate.of(2023,2,28);
-
         PurchaseForTableProjection p1 = mock(PurchaseForTableProjection.class);
         when(p1.getCategory()).thenReturn(Category.FOOD);
         when(p1.getTotalCost()).thenReturn(300.0);

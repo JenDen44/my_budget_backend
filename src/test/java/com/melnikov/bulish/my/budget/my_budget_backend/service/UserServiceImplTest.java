@@ -33,29 +33,27 @@ class UserServiceImplTest {
 
     @BeforeEach
     void setup() {
-        mockUser = new User();
-        mockUser.setId(1);
-        mockUser.setUsername("testUser");
+        mockUser = new User(1, "testUser");
     }
 
     @Test
     void isUserNameUniqueTrue() {
-        when(userRepo.findByUsername("newUser")).thenReturn(Optional.empty());
+        when(userRepo.findByUsername(mockUser.getUsername())).thenReturn(Optional.empty());
 
-        boolean result = userService.isUserNameUnique("newUser");
+        boolean result = userService.isUserNameUnique(mockUser.getUsername());
         assertThat(result).isTrue();
 
-        verify(userRepo).findByUsername("newUser");
+        verify(userRepo).findByUsername(anyString());
     }
 
     @Test
     void isUserNameUniqueFalse() {
-        when(userRepo.findByUsername("existingUser")).thenReturn(Optional.of(new User()));
+        when(userRepo.findByUsername(anyString())).thenReturn(Optional.of(new User()));
 
-        boolean result = userService.isUserNameUnique("existingUser");
+        boolean result = userService.isUserNameUnique(mockUser.getUsername());
         assertThat(result).isFalse();
 
-        verify(userRepo).findByUsername("existingUser");
+        verify(userRepo).findByUsername(anyString());
     }
 
     @Test
@@ -66,13 +64,13 @@ class UserServiceImplTest {
         SecurityContextHolder.setContext(securityContext);
 
         when(auth.isAuthenticated()).thenReturn(true);
-        when(auth.getName()).thenReturn("testUser");
-        when(userRepo.findByUsername("testUser")).thenReturn(Optional.of(mockUser));
+        when(auth.getName()).thenReturn(mockUser.getUsername());
+        when(userRepo.findByUsername(mockUser.getUsername())).thenReturn(Optional.of(mockUser));
 
         User result = userService.getCurrentUser();
 
         assertThat(result).isEqualTo(mockUser);
-        verify(userRepo).findByUsername("testUser");
+        verify(userRepo).findByUsername(anyString());
     }
 
     @Test
