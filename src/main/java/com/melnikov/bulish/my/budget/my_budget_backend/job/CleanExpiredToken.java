@@ -1,6 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.job;
 
-import com.melnikov.bulish.my.budget.my_budget_backend.token.TokenRepository;
+import com.melnikov.bulish.my.budget.my_budget_backend.repository.TokenRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +15,6 @@ public class CleanExpiredToken {
 
     @Scheduled(fixedRateString = "${token.clean_up}")
     public void cleanAllExpiredTokens() {
-        tokenRepo.cleanAllExpiredToken();
+        tokenRepo.deleteByExpiredTrueOrRevokedTrue();
     }
 }
