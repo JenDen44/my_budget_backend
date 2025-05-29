@@ -1,93 +1,88 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.melnikov.bulish.my.budget.my_budget_backend.enums.Category;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportChart;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportTable;
-import com.melnikov.bulish.my.budget.my_budget_backend.service.AuthenticationService;
-import com.melnikov.bulish.my.budget.my_budget_backend.service.JwtTokenService;
 import com.melnikov.bulish.my.budget.my_budget_backend.service.ReportService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(AuthenticationController.class)
-@AutoConfigureMockMvc(addFilters = false)
-public class ReportControllerTest {
+@ExtendWith(MockitoExtension.class)
+class ReportControllerTest {
 
-    @Autowired
-    ObjectMapper objectMapper;
-
-    @Autowired
     private MockMvc mockMvc;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @MockBean
-    AuthenticationService authenticationService;
-
-    @MockBean
-    private JwtTokenService jwtTokenService;
-
-    @MockBean
+    @Mock
     private ReportService reportService;
-    private static final String URL_REPORT_TABLE = "/reports/table";
-    private static final String URL_REPORT_CHART = "/reports/chart";
 
-    private static final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-M-d");
+    @InjectMocks
+    private ReportController reportController;
 
-    private List<ReportTable> createListReportTables() {
-        return List.of(new ReportTable(), new ReportTable());
-    }
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private ReportTable reportTable;
+    private ReportChart reportChart;
 
-    private List<ReportChart> createListReportCharts() {
-        return List.of(new ReportChart(), new ReportChart());
-    }
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(reportController).build();
 
-    @Test
-    public void findTableReportItemsByDate() throws Exception {
-        var startDate = timeFormatter.format(LocalDate.now().minusDays(2));
-        var endDate = timeFormatter.format(LocalDate.now());
-        var reportTables = createListReportTables();
+        startDate = LocalDate.now().minusDays(6);
+        endDate = LocalDate.now();
 
-        when(reportService.getTableReportItemsByDate(any(), any())).thenReturn(reportTables);
+        reportTable = new ReportTable();
+        reportTable.setDate(LocalDate.now().minusDays(2));
+        reportTable.setPurchasesByCategory(Map.of(Category.FOOD, 200.00, Category.EDUCATION, 10000.00));
 
-         mockMvc.perform(get(URL_REPORT_TABLE)
-                 .param("startDate", startDate)
-                 .param("endDate", endDate))
-                 .andExpect(status().isOk())
-                 .andDo(print())
-                 .andExpect(jsonPath("$.content").isArray())
-                 .andExpect(jsonPath("$.content", hasSize(greaterThan(0))));
+        reportChart = new ReportChart();
+        reportChart.setCategory(Category.CLOTHE);
+        reportChart.setTotal(850.50);
     }
 
     @Test
-    public void findChartReportItemsByDate() throws Exception {
-        var startDate = timeFormatter.format(LocalDate.now().minusDays(2));
-        var endDate = timeFormatter.format(LocalDate.now());
-        var reportTables = createListReportCharts();
+    void getTableReport() throws Exception {
+        List<ReportTable> reportTables = List.of(reportTable);
 
-        when(reportService.getChartReportItemsByDate(any(), any())).thenReturn(createListReportCharts());
+        when(reportService.getTableReportItemsByDate(any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(reportTables);
 
-        mockMvc.perform(get(URL_REPORT_CHART)
-                .param("startDate",startDate)
-                .param("endDate",endDate))
+        mockMvc.perform(get("/reports/table")
+                        .param("startDate", startDate.toString())
+                        .param("endDate", endDate.toString()))
                 .andExpect(status().isOk())
-                .andDo(print())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content", hasSize(greaterThan(0))));
+                .andExpect(jsonPath("$[0].date").exists())
+                .andExpect(jsonPath("$[0].purchasesByCategory").isMap());
+    }
+
+    @Test
+    void getChartReportData() throws Exception {
+        List<ReportChart> reportCharts = List.of(reportChart);
+
+        when(reportService.getChartReportItemsByDate(any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(reportCharts);
+
+        mockMvc.perform(get("/reports/chart")
+                        .param("startDate", startDate.toString())
+                        .param("endDate", endDate.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].category").value("CLOTHE"))
+                .andExpect(jsonPath("$[0].total").value(850.50));
     }
 }

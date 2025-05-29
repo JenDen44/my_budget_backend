@@ -6,24 +6,26 @@ import com.melnikov.bulish.my.budget.my_budget_backend.model.PagedResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseDto;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseRequest;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.PurchaseRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class PurchaseServiceImpl implements PurchaseService {
 
     private final PurchaseRepository purchaseRepo;
-    private final UserServiceImpl userService;
+    private final UserService userService;
     private final PurchaseNotificationService notificationService;
 
+    @Transactional(readOnly = true)
     @Override
     public PurchaseDto findPurchaseDtoById(Integer id) {
         Purchase purchase = purchaseRepo.findById(id).orElseThrow(() -> {
@@ -34,6 +36,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         return new PurchaseDto(purchase);
     }
 
+    @Transactional(readOnly = true)
     public PagedResponse<PurchaseDto> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir) {
         log.info("PurchaseServiceImpl.getPurchasesForCurrentUser() pageNo {}, pageSize {}, sortBy {}, sortDir {}", pageNo, pageSize, sortBy, sortDir);
 
@@ -65,7 +68,6 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
-    @Transactional
     public PurchaseDto savePurchase(PurchaseRequest purchaseRequest) {
         log.info("PurchaseServiceImpl.savePurchase() is started");
 
@@ -91,7 +93,6 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
-    @Transactional
     public PurchaseDto updatePurchase(PurchaseDto purchase, Integer id) {
         log.info("PurchaseServiceImpl.updatePurchase() is started");
         log.info("purchase id {} ", id);
@@ -117,7 +118,6 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
-    @Transactional
     public void deletePurchase(Integer id) {
         log.info("PurchaseServiceImpl.deletePurchase() is started");
         log.debug("Purchase to be deleted {} ", id);
@@ -129,6 +129,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         purchaseRepo.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
     public Purchase findPurchaseById(Integer id) {
         Purchase purchase = purchaseRepo.findById(id).orElseThrow(() -> {
             log.error("ResourceNotFoundException {}", id);

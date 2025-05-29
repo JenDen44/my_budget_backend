@@ -1,8 +1,6 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.handler;
 
-import com.melnikov.bulish.my.budget.my_budget_backend.service.WebSocketSessionService;
-import com.melnikov.bulish.my.budget.my_budget_backend.service.JwtTokenService;
-import com.melnikov.bulish.my.budget.my_budget_backend.service.UserServiceImpl;
+import com.melnikov.bulish.my.budget.my_budget_backend.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -18,7 +16,7 @@ import java.util.TimerTask;
 public class WebSocketHandler extends TextWebSocketHandler {
 
     private final WebSocketSessionService sessionService;
-    private final UserServiceImpl userService;
+    private final UserService userService;
     private final JwtTokenService jwtTokenService;
     private TimerTask task = null;
 

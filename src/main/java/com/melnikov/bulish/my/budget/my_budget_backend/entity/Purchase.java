@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,8 +17,13 @@ import java.time.LocalDate;
 @Table(name = "purchases")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class Purchase extends AbstractEntity {
+public class Purchase {
+
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    protected Integer id;
 
     private Category category;
 
@@ -64,7 +70,7 @@ public class Purchase extends AbstractEntity {
     }
 
     public Purchase(Integer id, Double cost, Integer quantity, User user) {
-        super(id);
+        this.id = id;
         this.cost = cost;
         this.quantity = quantity;
         this.user = user;

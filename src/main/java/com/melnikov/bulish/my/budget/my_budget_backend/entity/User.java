@@ -2,10 +2,7 @@ package com.melnikov.bulish.my.budget.my_budget_backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.UserDto;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,14 +11,17 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User extends AbstractEntity implements UserDetails {
+public class User implements UserDetails {
+
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    protected Integer id;
 
     private String username;
 
@@ -48,7 +48,7 @@ public class User extends AbstractEntity implements UserDetails {
     }
 
     public User(Integer id, String username) {
-        super(id);
+        this.id = id;
         this.username = username;
     }
 

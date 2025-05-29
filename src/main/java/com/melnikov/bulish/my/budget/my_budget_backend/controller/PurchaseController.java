@@ -3,7 +3,7 @@ package com.melnikov.bulish.my.budget.my_budget_backend.controller;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PagedResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseDto;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseRequest;
-import com.melnikov.bulish.my.budget.my_budget_backend.service.PurchaseServiceImpl;
+import com.melnikov.bulish.my.budget.my_budget_backend.service.PurchaseService;
 import com.melnikov.bulish.my.budget.my_budget_backend.constants.PaginationConstants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,10 +21,10 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class PurchaseController {
 
-    private final PurchaseServiceImpl purchaseService;
+    private final PurchaseService purchaseService;
 
     @Autowired
-    public PurchaseController(PurchaseServiceImpl purchaseService) {
+    public PurchaseController(PurchaseService purchaseService) {
         this.purchaseService = purchaseService;
     }
 

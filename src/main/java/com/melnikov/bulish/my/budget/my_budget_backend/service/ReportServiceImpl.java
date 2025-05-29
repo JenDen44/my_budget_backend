@@ -8,6 +8,7 @@ import com.melnikov.bulish.my.budget.my_budget_backend.repository.PurchaseReposi
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -16,11 +17,14 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public  class ReportServiceImpl implements ReportService {
 
     private final PurchaseRepository purchaseRepository;
-    private final UserServiceImpl userService;
 
+    private final UserService userService;
+
+    @Transactional(readOnly = true)
     public List<ReportTable> getTableReportItemsByDate(LocalDate startDate, LocalDate endDate) {
         log.info("ReportService.getTableReportItemsByDate() started");
         var purchases = getPurchasesWithinDateRange(startDate, endDate);
@@ -38,6 +42,7 @@ public  class ReportServiceImpl implements ReportService {
                  .collect(Collectors.toList()));
     }
 
+    @Transactional(readOnly = true)
     public List<ReportChart> getChartReportItemsByDate(LocalDate startDate, LocalDate endDate) {
         log.info("ReportService.getChartReportItemsByDate() started");
         var purchases = getPurchasesWithinDateRange(startDate, endDate);

@@ -5,16 +5,23 @@ import com.melnikov.bulish.my.budget.my_budget_backend.enums.Category;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PagedResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseDto;
 import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseRequest;
-import com.melnikov.bulish.my.budget.my_budget_backend.service.AuthenticationService;
-import com.melnikov.bulish.my.budget.my_budget_backend.service.JwtTokenService;
+import com.melnikov.bulish.my.budget.my_budget_backend.service.AuthenticationServiceImpl;
+import com.melnikov.bulish.my.budget.my_budget_backend.service.JwtTokenServiceImpl;
 import com.melnikov.bulish.my.budget.my_budget_backend.service.PurchaseService;
+import com.melnikov.bulish.my.budget.my_budget_backend.service.PurchaseServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,8 +29,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -33,103 +39,115 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(AuthenticationController.class)
-@AutoConfigureMockMvc(addFilters = false)
-public class PurchaseControllerTest {
+@ExtendWith(MockitoExtension.class)
+class PurchaseControllerTest {
 
-    @Autowired
-    ObjectMapper objectMapper;
-
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private PurchaseService purchaseService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @MockBean
-    private JwtTokenService jwtTokenService;
+    @Mock
+    private PurchaseServiceImpl purchaseService;
 
-    @MockBean
-    AuthenticationService authenticationService;
+    @InjectMocks
+    private PurchaseController purchaseController;
 
-    private static final String BASE_URL = "/purchases";
+    private PurchaseDto purchaseDto;
+    private PurchaseRequest purchaseRequest;
+    private PagedResponse<PurchaseDto> pagedResponse;
 
-    private PurchaseRequest createSamplePurchaseRequest() {
-        return new PurchaseRequest(Category.CLOTHE, 123.80, 2, LocalDate.now());
-    }
+    private static String URL = "/purchases";
 
-    private PurchaseDto createSamplePurchaseDto() {
-        PurchaseDto purchaseDto = new PurchaseDto(Category.CLOTHE, 123.80, 2, LocalDate.now());
-        purchaseDto.setUserId(1);
-        return purchaseDto;
-    }
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(purchaseController).build();
 
-    private PagedResponse<PurchaseDto> createSamplePagedResponse() {
-        PagedResponse<PurchaseDto> pagedResponse = new PagedResponse<>();
-        pagedResponse.setContent((List.of(new PurchaseDto(), new PurchaseDto())));
-        return pagedResponse;
+        purchaseDto = PurchaseDto.builder()
+                .id(1)
+                .category(Category.CLOTHE)
+                .cost(25.50)
+                .build();
+
+        purchaseRequest = PurchaseRequest.builder()
+                .category(Category.EDUCATION)
+                .cost(15.75)
+                .build();
+
+        pagedResponse = new PagedResponse<>();
+        pagedResponse.setContent(List.of(purchaseDto));
+        pagedResponse.setPageNumber(0);
+        pagedResponse.setPageSize(10);
+        pagedResponse.setTotalElements(1);
+        pagedResponse.setTotalPages(1);
     }
 
     @Test
-    public void getPurchasePage() throws Exception {
-        var pagedResponse = createSamplePagedResponse();
+    void getPurchasePage() throws Exception {
+        when(purchaseService.getPurchasesForCurrentUser(anyInt(), anyInt(), anyString(), anyString()))
+                .thenReturn(pagedResponse);
 
-        when(purchaseService.getPurchasesForCurrentUser(anyInt(), anyInt(), anyString(), anyString())).thenReturn(pagedResponse);
-
-        mockMvc.perform(get(BASE_URL)
-                .param("pageNo", "0")
-                .param("pageSize", "5")
-                .param("sortBy", "id")
-                .param("sortDir", "asc"))
+        mockMvc.perform(get(URL)
+                        .param("pageNo", "0")
+                        .param("pageSize", "10")
+                        .param("sortBy", "date")
+                        .param("sortDir", "desc"))
                 .andExpect(status().isOk())
-                .andDo(print())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content", hasSize(greaterThan(0))));
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].category").value("CLOTHE"))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test
-    public void createPurchase() throws Exception {
-        var purchaseDto = createSamplePurchaseDto();
-        var purchaseRequest = createSamplePurchaseRequest();
+    void getPurchase() throws Exception {
+        when(purchaseService.findPurchaseDtoById(anyInt()))
+                .thenReturn(purchaseDto);
 
-        when(purchaseService.savePurchase(any(PurchaseRequest.class))).thenReturn(purchaseDto);
-
-         mockMvc.perform(post(BASE_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(purchaseRequest))
-                .with(csrf()))
-                .andDo(print())
-                .andExpect(jsonPath("$.category").value(purchaseDto.getCategory()))
-                .andExpect(jsonPath("$.id").value(purchaseDto.getId()))
-                .andExpect(jsonPath("$.cost").value(purchaseDto.getCost()));
-        }
-
-    @Test
-    public void updatePurchase() throws Exception {
-        var purchaseDto = createSamplePurchaseDto();
-
-        when(purchaseService.updatePurchase(any(PurchaseDto.class), anyInt())).thenReturn(purchaseDto);
-
-        mockMvc.perform(put(BASE_URL + "/" + purchaseDto.getId())
-                .contentType("application/json")
-                .content(objectMapper.writeValueAsString(purchaseDto))
-                .with(csrf()))
-                .andDo(print())
-                .andExpect(jsonPath("$.category").value(purchaseDto.getCategory()))
-                .andExpect(jsonPath("$.id").value(purchaseDto.getId()))
-                .andExpect(jsonPath("$.cost").value(purchaseDto.getCost()));
+        mockMvc.perform(get(URL+"/" + purchaseDto.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.category").value("CLOTHE"))
+                .andExpect(jsonPath("$.cost").value(25.50));
     }
 
+    @Test
+    void createPurchase() throws Exception {
+        when(purchaseService.savePurchase(any(PurchaseRequest.class)))
+                .thenReturn(purchaseDto);
+
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(purchaseRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.category").value("CLOTHE"))
+                .andExpect(jsonPath("$.cost").value(25.50));
+    }
 
     @Test
-    public void deletePurchase() throws Exception {
-        var purchaseDto = createSamplePurchaseDto();
+    void updatePurchase() throws Exception {
+        PurchaseDto updatedDto = PurchaseDto.builder()
+                .id(1)
+                .category(Category.FOOD)
+                .cost(30.00)
+                .build();
 
-        mockMvc.perform(delete(BASE_URL + "/" + purchaseDto.getId())
-                .with(csrf()))
-                .andExpect(status()
-                .isOk());
+        when(purchaseService.updatePurchase(any(PurchaseDto.class), anyInt()))
+                .thenReturn(updatedDto);
 
-        verify(purchaseService).deletePurchase(anyInt());
+        mockMvc.perform(put(URL+"/" + updatedDto.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatedDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.category").value("FOOD"))
+                .andExpect(jsonPath("$.cost").value(30.00));
+    }
+
+    @Test
+    void deletePurchase() throws Exception {
+        doNothing().when(purchaseService).deletePurchase(anyInt());
+
+        mockMvc.perform(delete(URL + "/" + purchaseDto.getId()))
+                .andExpect(status().isOk());
     }
 }

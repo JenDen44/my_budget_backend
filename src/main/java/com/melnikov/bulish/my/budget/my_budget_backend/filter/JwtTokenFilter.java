@@ -2,7 +2,6 @@ package com.melnikov.bulish.my.budget.my_budget_backend.filter;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.constants.JWTConstants;
 import com.melnikov.bulish.my.budget.my_budget_backend.service.JwtTokenService;
-import com.melnikov.bulish.my.budget.my_budget_backend.repository.TokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

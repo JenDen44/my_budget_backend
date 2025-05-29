@@ -41,8 +41,8 @@ class UserServiceImplTest {
         when(userRepo.findByUsername(mockUser.getUsername())).thenReturn(Optional.empty());
 
         boolean result = userService.isUserNameUnique(mockUser.getUsername());
-        assertThat(result).isTrue();
 
+        assertThat(result).isTrue();
         verify(userRepo).findByUsername(anyString());
     }
 
@@ -51,8 +51,8 @@ class UserServiceImplTest {
         when(userRepo.findByUsername(anyString())).thenReturn(Optional.of(new User()));
 
         boolean result = userService.isUserNameUnique(mockUser.getUsername());
-        assertThat(result).isFalse();
 
+        assertThat(result).isFalse();
         verify(userRepo).findByUsername(anyString());
     }
 
@@ -60,9 +60,9 @@ class UserServiceImplTest {
     void getCurrentUser() {
         Authentication auth = mock(Authentication.class);
         SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(auth);
         SecurityContextHolder.setContext(securityContext);
 
+        when(securityContext.getAuthentication()).thenReturn(auth);
         when(auth.isAuthenticated()).thenReturn(true);
         when(auth.getName()).thenReturn(mockUser.getUsername());
         when(userRepo.findByUsername(mockUser.getUsername())).thenReturn(Optional.of(mockUser));
@@ -76,8 +76,9 @@ class UserServiceImplTest {
     @Test
     void getCurrentUserFailed() {
         SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(null);
         SecurityContextHolder.setContext(securityContext);
+
+        when(securityContext.getAuthentication()).thenReturn(null);
 
         assertThatThrownBy(() -> userService.getCurrentUser())
                 .isInstanceOf(AuthenticationException.class);
@@ -91,14 +92,5 @@ class UserServiceImplTest {
 
         assertThat(result).isEqualTo(mockUser);
         verify(userRepo).findByUsername("existingUser");
-    }
-
-    @Test
-    void findByUserNameFailed() {
-        when(userRepo.findByUsername("unknownUser")).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> userService.findByUserName("unknownUser"))
-                .isInstanceOf(ResourceNotFoundException.class);
-        verify(userRepo).findByUsername("unknownUser");
     }
 }

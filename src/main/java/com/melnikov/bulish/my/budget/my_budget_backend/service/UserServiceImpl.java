@@ -9,19 +9,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepo;
 
+    @Transactional(readOnly = true)
     @Override
     public boolean isUserNameUnique(String userName) {
         return userRepo.findByUsername(userName).isEmpty();
     }
 
+    @Transactional(readOnly = true)
     @Override
     public User getCurrentUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -39,6 +43,7 @@ public class UserServiceImpl implements UserService {
         });
     }
 
+    @Transactional(readOnly = true)
     @Override
     public User findByUserName(String username) {
         return userRepo.findByUsername(username)

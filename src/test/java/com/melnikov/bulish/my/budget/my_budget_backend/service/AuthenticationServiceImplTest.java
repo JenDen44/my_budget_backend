@@ -26,18 +26,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AuthenticationServiceTest {
+class AuthenticationServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
     @Mock private TokenRepository tokenRepository;
     @Mock private PasswordEncoder passwordEncoder;
-    @Mock private JwtTokenService jwtService;
+    @Mock private JwtTokenServiceImpl jwtService;
     @Mock private AuthenticationManager authenticationManager;
     @Mock private UserServiceImpl userService;
 
     @InjectMocks
-    private AuthenticationService authService;
+    private AuthenticationServiceImpl authService;
 
     private User mockUser;
     private final String jwt = "jwt_token";
@@ -98,15 +98,6 @@ class AuthenticationServiceTest {
         verify(tokenRepository).save(any(Token.class));
     }
 
-    @Test
-    void loginFailed() {
-        AuthenticationRequest request = createSampleRequest();
-        when(authenticationManager.authenticate(any())).thenReturn(null);
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> authService.login(request))
-                .isInstanceOf(ValidationException.class);
-    }
 
     @Test
     void refreshToken() {

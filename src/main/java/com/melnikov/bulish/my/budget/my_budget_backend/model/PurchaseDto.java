@@ -2,21 +2,26 @@ package com.melnikov.bulish.my.budget.my_budget_backend.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.AbstractDto;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Purchase;
 import com.melnikov.bulish.my.budget.my_budget_backend.enums.Category;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Schema(description = "PurchaseResponse Model Information")
-public class PurchaseDto extends AbstractDto {
+public class PurchaseDto implements Serializable {
+
+    @Schema(description = "purchase id", example = "1")
+    private Integer id;
 
     @Schema(description = "Category can be chosen from : CLOTHE, EDUCATION, FOOD, ENTERTAINMENT", example = "CLOTHE")
     private Category category;
@@ -37,13 +42,6 @@ public class PurchaseDto extends AbstractDto {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate purchaseDate;
 
-    public PurchaseDto(Category category, Double cost, Integer quantity, LocalDate purchaseDate) {
-        this.category = category;
-        this.cost = cost;
-        this.quantity = quantity;
-        this.totalCost = cost * quantity;
-        this.purchaseDate = purchaseDate;
-    }
 
     public PurchaseDto(Purchase purchase) {
         this.id = purchase.getId();

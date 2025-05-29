@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -70,8 +71,12 @@ class ReportServiceImplTest {
 
         List<ReportTable> result = reportService.getTableReportItemsByDate(startDate, endDate);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getDate()).isEqualTo(p1.getPurchaseDate());
+        assertEquals(1, result.size());
+
+        Map<Category, Double> firstDayCategories = result.getFirst().getPurchasesByCategory();
+        assertEquals(2, firstDayCategories.size());
+        assertEquals(100.0, firstDayCategories.get(Category.FOOD));
+        assertEquals(150.0, firstDayCategories.get(Category.CLOTHE));
     }
 
     @Test

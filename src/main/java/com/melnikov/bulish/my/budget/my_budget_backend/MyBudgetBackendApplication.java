@@ -7,7 +7,6 @@ import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @EnableScheduling
-@EnableWebMvc
 @SpringBootApplication
 public class MyBudgetBackendApplication {
 
