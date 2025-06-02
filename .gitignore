@@ -1,5 +1,23 @@
-**/target/*
-**/build/*
-**/.idea/*
+# Build artifacts
+**/target/
+**/build/
+**/out/
+
+# IDE and editor
+**/.idea/
 **/*.iml
-**/logs/*
+**/.idea_modules/
+**/*.ipr
+**/*.iws
+**/.project
+**/.classpath
+
+# Logs and temp files
+**/logs/
+*.log
+*.tmp
+*.bak
+
+# System files
+.DS_Store
+Thumbs.db
