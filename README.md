@@ -55,6 +55,12 @@ My-Budget is a personal finance management API that allows users to track expens
   
 - **Swagger/OpenAPI 3**
 
+- **Websocket**
+
+- **Lombok**
+
+- **Mockito**
+
 
 
 ## For detailed API documentation, visit /swagger-ui.html after starting the application.
