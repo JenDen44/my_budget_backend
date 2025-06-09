@@ -8,25 +8,25 @@ My-Budget is a personal finance management API that allows users to track expens
 - **Data Visualization**: Two report formats for expense analysis
 - **User Authentication**: JWT-based registration/login with token refresh
 - **Pagination**: Configurable pagination for purchase listings
-- **Comprehensive Testing**: 100% unit test coverage for controllers and services
+- **Comprehensive Testing**: Unit test coverage for controllers and services
 
 ## API Endpoints
 
 ### 🔐 Authentication Controller
 | Endpoint       | Method | Description                          | Status Codes        |
 |----------------|--------|--------------------------------------|---------------------|
-| `/register`    | POST   | Register new user                    | 200, 422            |
-| `/login`       | POST   | Authenticate user                    | 200, 422            |
-| `/refresh`     | GET    | Refresh expired JWT token            | 200, 401            |
+| `/register`    | POST   | Register new user                    | 201, 422            |
+| `/login`       | POST   | Authenticate user                    | 200, 422, 404       |
+| `/refresh`     | POST   | Refresh expired JWT token            | 200, 401, 404       |
 
 ### 💰 Purchase Controller
 | Endpoint              | Method | Description                          | Status Codes        |
 |-----------------------|--------|--------------------------------------|---------------------|
 | `/purchases`          | GET    | Get paginated purchases              | 200, 401, 422       |
-| `/purchases/{id}`     | GET    | Get purchase by ID                   | 200, 401, 404, 422  |
-| `/purchases`          | POST   | Create new purchase                  | 200, 401, 422       |
-| `/purchases/{id}`     | PUT    | Update existing purchase             | 200, 401, 404, 422  |
-| `/purchases/{id}`     | DELETE | Delete purchase                      | 200, 401, 404       |
+| `/purchases/{id}`     | GET    | Get purchase by ID                   | 200, 401, 404       |
+| `/purchases`          | POST   | Create new purchase                  | 201, 401, 422       |
+| `/purchases/{id}`     | PUT    | Update existing purchase             | 201, 401, 404, 422  |
+| `/purchases/{id}`     | DELETE | Delete purchase                      | 204, 401, 404       |
 
 **Pagination Parameters:**
 | Parameter | Default | Description |
@@ -47,7 +47,7 @@ My-Budget is a personal finance management API that allows users to track expens
 
 - **Java 21**
   
-- **Spring Boot 3**
+- **Spring Boot 3.4.4**
   
 - **Spring Security**
 
