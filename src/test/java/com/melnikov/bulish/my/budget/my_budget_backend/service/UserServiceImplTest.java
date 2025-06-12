@@ -1,8 +1,7 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.AuthenticationException;
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.ResourceNotFoundException;
+import com.melnikov.bulish.my.budget.my_budget_backend.exceptions.AuthenticationException;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,27 +32,29 @@ class UserServiceImplTest {
 
     @BeforeEach
     void setup() {
-        mockUser = new User(1, "testUser");
+        mockUser = new User();
+        mockUser.setUsername("testUser");
+        mockUser.setId(1L);
     }
 
     @Test
     void isUserNameUniqueTrue() {
-        when(userRepo.findByUsername(mockUser.getUsername())).thenReturn(Optional.empty());
+        when(userRepo.existsByUsername(mockUser.getUsername())).thenReturn(false);
 
-        boolean result = userService.isUserNameUnique(mockUser.getUsername());
+        boolean result = userService.isUsernameUnique(mockUser.getUsername());
 
         assertThat(result).isTrue();
-        verify(userRepo).findByUsername(anyString());
+        verify(userRepo).existsByUsername(anyString());
     }
 
     @Test
     void isUserNameUniqueFalse() {
-        when(userRepo.findByUsername(anyString())).thenReturn(Optional.of(new User()));
+        when(userRepo.existsByUsername(mockUser.getUsername())).thenReturn(true);
 
-        boolean result = userService.isUserNameUnique(mockUser.getUsername());
+        boolean result = userService.isUsernameUnique(mockUser.getUsername());
 
         assertThat(result).isFalse();
-        verify(userRepo).findByUsername(anyString());
+        verify(userRepo).existsByUsername(anyString());
     }
 
     @Test
@@ -86,11 +87,11 @@ class UserServiceImplTest {
 
     @Test
     void findByUserName() {
-        when(userRepo.findByUsername("existingUser")).thenReturn(Optional.of(mockUser));
+        when(userRepo.findByUsername(anyString())).thenReturn(Optional.of(mockUser));
 
-        User result = userService.findByUserName("existingUser");
+        User result = userService.findByUsername(mockUser.getUsername());
 
         assertThat(result).isEqualTo(mockUser);
-        verify(userRepo).findByUsername("existingUser");
+        verify(userRepo).findByUsername(anyString());
     }
 }

@@ -1,11 +1,11 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.*;
+import com.melnikov.bulish.my.budget.my_budget_backend.exceptions.*;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Token;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
 import com.melnikov.bulish.my.budget.my_budget_backend.enums.TokenType;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.AuthenticationRequest;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.AuthenticationResponse;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationRequest;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.TokenRepository;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("AuthenticationService.register() started");
         String userName = request.getUsername();
 
-        if (!userService.isUserNameUnique(userName)) {
+        if (!userService.isUsernameUnique(userName)) {
             log.error("Username is already in use {}", userName);
             throw new ValidationException("User","Username is already in use");
         }
@@ -41,15 +41,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         var user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .enabled(true)
                 .build();
 
-        log.info("User is created id {}, name {}", user.getId(), user.getUsername());
         userRepository.save(user);
+        log.info("User created - ID: {}, Name: {}", user.getId(), user.getUsername());
 
-        return assignNewTokens(user, false);
+        return assignNewTokens(user);
     }
 
-    @Transactional(readOnly = true)
     public AuthenticationResponse login(AuthenticationRequest request) {
         log.info("AuthenticationService.login() started");
         String userName = request.getUsername();
@@ -64,7 +64,45 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResourceNotFoundException("User", userName);
             });
 
-        return assignNewTokens(user, true);
+        revokeAllUserTokens(user);
+        return assignNewTokens(user);
+    }
+
+    public AuthenticationResponse refreshToken(String refreshToken) {
+        log.info("AuthenticationService.refreshToken() is started");
+
+        var username = jwtService.extractUsername(refreshToken);
+
+        if (username == null) {
+            log.error("ValidationException : The extracted username from token is null");
+            throw new ValidationException("Token","Extracted username from token is null");
+        }
+
+        Token storedToken = tokenRepository.findByToken(refreshToken)
+                .filter(t -> !t.isExpired() && !t.isRevoked())
+                .orElseThrow(() -> {
+                    log.warn("Invalid refresh token attempt for user: {}", username);
+                    return new SecurityException("Invalid or expired token");
+                });
+
+        var user = userRepository.findByUsername(username)
+                .orElseThrow(() -> {
+                    log.error("ResourceNotFoundException {}", username);
+                    return new ResourceNotFoundException("User", username);
+                });
+
+
+        if (!jwtService.validateRefreshToken(refreshToken, user)) {
+            log.warn("JWT validation failed for user: {}", user.getId());
+            storedToken.setRevoked(true);
+            tokenRepository.save(storedToken);
+            throw new SecurityException("Token validation failed");
+        }
+
+        log.debug("User id: {} name: {} requested refresh token", user.getId(), user.getUsername());
+
+        revokeAllUserTokens(user);
+        return assignNewTokens(user);
     }
 
     private void saveUserToken(User user, String jwtToken, TokenType tokenType) {
@@ -80,7 +118,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private void revokeAllUserTokens(User user) {
-        var validUserTokens = tokenRepository.findByUserIdAndExpiredFalseOrRevokedFalse(user.getId());
+        var validUserTokens = tokenRepository.findValidTokensByUser(user.getId());
         if (validUserTokens.isEmpty()) return;
 
         validUserTokens.forEach(token -> {
@@ -91,49 +129,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         tokenRepository.saveAll(validUserTokens);
     }
 
-    public AuthenticationResponse refreshToken(String authorizationHeader) {
-        log.info("AuthenticationService.refreshToken() is started");
-
-        var refreshToken = jwtService.resolveToken(authorizationHeader);
-        var userEmail = jwtService.extractUsername(refreshToken);
-
-        if (userEmail == null) {
-            log.error("ValidationException : The extracted userEmail from token is null");
-            throw new ValidationException("Token","Extracted email from token is null");
-        }
-
-        tokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> {
-                    log.error("ResourceNotFoundException {}", userEmail);
-                    return new ResourceNotFoundException("User", userEmail);
-                });
-
-        var user = this.userRepository.findByUsername(userEmail)
-                .orElseThrow(() -> {
-                    log.error("ResourceNotFoundException {}", userEmail);
-                    return new ResourceNotFoundException("User", userEmail);
-                });
-
-        log.debug("current user requested refresh id {}, name {}", user.getId(), user.getUsername());
-
-        if (!jwtService.isTokenValid(refreshToken, user)) {
-            log.error("ValidationException : The token is not valid");
-            throw new ValidationException("Token","is not valid");
-        }
-
-       return assignNewTokens(user, true);
-    }
-
-    private AuthenticationResponse assignNewTokens(User user, boolean revoke) {
-        var newJwtToken = jwtService.generateToken(user);
+    private AuthenticationResponse assignNewTokens(User user) {
+        var newJwtToken = jwtService.generateAccessToken(user);
         var newRefreshToken = jwtService.generateRefreshToken(user);
 
-        if (revoke) revokeAllUserTokens(user);
         saveUserToken(user, newRefreshToken, TokenType.BEARER);
 
         return AuthenticationResponse.builder()
                 .accessToken(newJwtToken)
                 .refreshToken(newRefreshToken)
+                .tokenType(TokenType.BEARER)
                 .build();
     }
 }

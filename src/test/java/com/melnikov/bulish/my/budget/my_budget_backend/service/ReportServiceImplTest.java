@@ -1,10 +1,10 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.PurchaseSummaryDTO;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
 import com.melnikov.bulish.my.budget.my_budget_backend.enums.Category;
-import com.melnikov.bulish.my.budget.my_budget_backend.interfaces.PurchaseForTableProjection;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportChart;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportTable;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.ReportChart;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.ReportTable;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.PurchaseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,15 +13,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,66 +39,73 @@ class ReportServiceImplTest {
 
     private LocalDate endDate = null;
 
+    private PurchaseSummaryDTO p1;
+
+    private PurchaseSummaryDTO p2;
+
     @BeforeEach
     void setup() {
         currentUser = new User();
-        currentUser.setId(1);
+        currentUser.setId(1L);
         currentUser.setUsername("testuser");
+
         endDate = LocalDate.now();
         startDate = LocalDate.now().minusDays(5);
+
+        p1 = PurchaseSummaryDTO.builder()
+                .category(Category.EDUCATION)
+                .cost(BigDecimal.valueOf(200.00))
+                .quantity(2)
+                .purchaseDate(startDate)
+                .build();
+
+        p2 = PurchaseSummaryDTO.builder()
+                .category(Category.CLOTHING)
+                .cost(BigDecimal.valueOf(100.00))
+                .quantity(3)
+                .purchaseDate(startDate.plusDays(2))
+                .build();
     }
 
     @Test
     void getTableReportItemsByDate_returnsCorrectReport() {
-        PurchaseForTableProjection p1 = mock(PurchaseForTableProjection.class);
-        when(p1.getPurchaseDate()).thenReturn(LocalDate.of(2023,1,10));
-        when(p1.getCategory()).thenReturn(Category.FOOD);
-        when(p1.getTotalCost()).thenReturn(100.0);
-
-        PurchaseForTableProjection p2 = mock(PurchaseForTableProjection.class);
-        when(p2.getPurchaseDate()).thenReturn(LocalDate.of(2023,1,10));
-        when(p2.getCategory()).thenReturn(Category.CLOTHE);
-        when(p2.getTotalCost()).thenReturn(150.0);
-
         when(userService.getCurrentUser()).thenReturn(currentUser);
 
-        List<PurchaseForTableProjection> mockPurchases = Arrays.asList(p1, p2);
+        List<PurchaseSummaryDTO> mockPurchases = Arrays.asList(p1, p2);
         when(purchaseRepository.findPurchaseSummariesByDateRange(startDate, endDate, currentUser.getId()))
                 .thenReturn(mockPurchases);
 
         List<ReportTable> result = reportService.getTableReportItemsByDate(startDate, endDate);
 
-        assertEquals(1, result.size());
+        assertEquals(2, result.size());
 
-        Map<Category, Double> firstDayCategories = result.getFirst().getPurchasesByCategory();
-        assertEquals(2, firstDayCategories.size());
-        assertEquals(100.0, firstDayCategories.get(Category.FOOD));
-        assertEquals(150.0, firstDayCategories.get(Category.CLOTHE));
+        Map<Category, BigDecimal> firstDayCategories = result.getFirst().getPurchasesByCategory();
+        Map<Category, BigDecimal> secondCategories = result.getLast().getPurchasesByCategory();
+
+        assertEquals(1, firstDayCategories.size());
+        assertEquals(p1.getCost().multiply(BigDecimal.valueOf(p1.getQuantity())),
+                firstDayCategories.get(Category.EDUCATION));
+
+        assertEquals(1, secondCategories.size());
+        assertEquals(p2.getCost().multiply(BigDecimal.valueOf(p2.getQuantity())),
+                secondCategories.get(Category.CLOTHING));
     }
 
     @Test
     void getChartReportItemsByDate_returnsCorrectChart() {
-        PurchaseForTableProjection p1 = mock(PurchaseForTableProjection.class);
-        when(p1.getCategory()).thenReturn(Category.FOOD);
-        when(p1.getTotalCost()).thenReturn(300.0);
-
-        PurchaseForTableProjection p2 = mock(PurchaseForTableProjection.class);
-        when(p2.getCategory()).thenReturn(Category.CLOTHE);
-        when(p2.getTotalCost()).thenReturn(150.0);
-
         when(userService.getCurrentUser()).thenReturn(currentUser);
 
-        List<PurchaseForTableProjection> mockPurchases = Arrays.asList(p1, p2);
+        List<PurchaseSummaryDTO> mockPurchases = Arrays.asList(p1, p2);
         when(purchaseRepository.findPurchaseSummariesByDateRange(startDate, endDate, currentUser.getId()))
                 .thenReturn(mockPurchases);
 
         List<ReportChart> result = reportService.getChartReportItemsByDate(startDate, endDate);
 
         assertThat(result).hasSize(2);
-        Map<Category, Double> map = new HashMap<>();
+        Map<Category, BigDecimal> map = new HashMap<>();
         result.forEach(reportChart -> map.put(reportChart.getCategory(), reportChart.getTotal()));
 
-        assertThat(map.get(Category.FOOD)).isEqualTo(300.0);
-        assertThat(map.get(Category.CLOTHE)).isEqualTo(150.0);
+        assertThat(map.get(Category.EDUCATION)).isEqualTo(p1.getCost().multiply(BigDecimal.valueOf(p1.getQuantity())));
+        assertThat(map.get(Category.CLOTHING)).isEqualTo(p2.getCost().multiply(BigDecimal.valueOf(p2.getQuantity())));
     }
 }

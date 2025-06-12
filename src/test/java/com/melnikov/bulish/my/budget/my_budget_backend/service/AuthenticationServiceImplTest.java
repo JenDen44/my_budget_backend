@@ -2,9 +2,9 @@ package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Token;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.ValidationException;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.AuthenticationRequest;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.AuthenticationResponse;
+import com.melnikov.bulish.my.budget.my_budget_backend.exceptions.ValidationException;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationRequest;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.TokenRepository;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,28 +43,24 @@ class AuthenticationServiceImplTest {
     private final String jwt = "jwt_token";
     private final String refresh = "refresh_token";
 
+    private AuthenticationRequest authenticationRequest;
+
     @BeforeEach
     void setup() {
-        mockUser = new User();
-        mockUser.setId(1);
-        mockUser.setUsername("testuser");
-        mockUser.setPassword("encodedPassword");
-    }
-
-    private AuthenticationRequest createSampleRequest() {
-        return new AuthenticationRequest("testuser", "testpasswordR@$34");
+        mockUser = new User("testuser", "encodedPassword");
+        mockUser.setId(1L);
+        authenticationRequest = new AuthenticationRequest("testuser", "testpasswordR@$34");
     }
 
     @Test
     void register() {
-        AuthenticationRequest request = createSampleRequest();
-        when(userService.isUserNameUnique(request.getUsername())).thenReturn(true);
-        when(passwordEncoder.encode(request.getPassword())).thenReturn(mockUser.getPassword());
+        when(userService.isUsernameUnique(authenticationRequest.getUsername())).thenReturn(true);
+        when(passwordEncoder.encode(authenticationRequest.getPassword())).thenReturn(mockUser.getPassword());
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(jwtService.generateToken(any(User.class))).thenReturn(jwt);
+        when(jwtService.generateAccessToken(any(User.class))).thenReturn(jwt);
         when(jwtService.generateRefreshToken(any(User.class))).thenReturn(refresh);
 
-        AuthenticationResponse response = authService.register(request);
+        AuthenticationResponse response = authService.register(authenticationRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getAccessToken()).isEqualTo(jwt);
@@ -74,48 +70,42 @@ class AuthenticationServiceImplTest {
 
     @Test
     void registerFailed() {
-        AuthenticationRequest request = createSampleRequest();
-        when(userService.isUserNameUnique(anyString())).thenReturn(false);
+        when(userService.isUsernameUnique(anyString())).thenReturn(false);
 
-        assertThatThrownBy(() -> authService.register(request))
+        assertThatThrownBy(() -> authService.register(authenticationRequest))
                 .isInstanceOf(ValidationException.class);
     }
 
     @Test
     void login() {
-        AuthenticationRequest request = createSampleRequest();
         when(authenticationManager.authenticate(any())).thenReturn(null);
-        when(userRepository.findByUsername(request.getUsername())).thenReturn(Optional.of(mockUser));
-        when(jwtService.generateToken(any(User.class))).thenReturn(jwt);
+        when(userRepository.findByUsername(authenticationRequest.getUsername())).thenReturn(Optional.of(mockUser));
+        when(jwtService.generateAccessToken(any(User.class))).thenReturn(jwt);
         when(jwtService.generateRefreshToken(any(User.class))).thenReturn(refresh);
 
-        AuthenticationResponse response = authService.login(request);
+        AuthenticationResponse response = authService.login(authenticationRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getAccessToken()).isEqualTo(jwt);
         verify(authenticationManager).authenticate(any());
-        verify(userRepository).findByUsername(request.getUsername());
+        verify(userRepository).findByUsername(authenticationRequest.getUsername());
         verify(tokenRepository).save(any(Token.class));
     }
 
 
     @Test
     void refreshToken() {
-        Token token = new Token();
-        token.setToken(jwt);
-        String authHeader = "Bearer " + token.getToken();
-        when(jwtService.resolveToken(authHeader)).thenReturn(token.getToken());
+        Token token = Token.builder().token("refresh").revoked(false).expired(false).build();
+
         when(jwtService.extractUsername(token.getToken())).thenReturn(mockUser.getUsername());
         when(tokenRepository.findByToken(token.getToken())).thenReturn(Optional.of(token));
-        User user = new User();
-        user.setId(1);
-        user.setUsername(mockUser.getUsername());
-        when(userRepository.findByUsername(mockUser.getUsername())).thenReturn(Optional.of(user));
-        when(jwtService.isTokenValid(anyString(), any(User.class))).thenReturn(true);
-        when(jwtService.generateToken(any(User.class))).thenReturn(jwt);
+
+        when(userRepository.findByUsername(mockUser.getUsername())).thenReturn(Optional.of(mockUser));
+        when(jwtService.validateRefreshToken(token.getToken(), mockUser)).thenReturn(true);
+        when(jwtService.generateAccessToken(any(User.class))).thenReturn(jwt);
         when(jwtService.generateRefreshToken(any(User.class))).thenReturn(refresh);
 
-        AuthenticationResponse response = authService.refreshToken(authHeader);
+        AuthenticationResponse response = authService.refreshToken(token.getToken());
 
         assertThat(response).isNotNull();
         assertThat(response.getAccessToken()).isEqualTo(jwt);
@@ -125,11 +115,9 @@ class AuthenticationServiceImplTest {
 
     @Test
     void refreshTokenFailed() {
-        String authHeader = "Bearer invalidToken";
-        when(jwtService.resolveToken(authHeader)).thenReturn("invalidToken");
         when(jwtService.extractUsername(anyString())).thenReturn(null);
 
-        assertThatThrownBy(() -> authService.refreshToken(authHeader))
+        assertThatThrownBy(() -> authService.refreshToken(refresh))
                 .isInstanceOf(ValidationException.class);
     }
 }

@@ -1,15 +1,18 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.config;
 
-import com.melnikov.bulish.my.budget.my_budget_backend.filter.JwtTokenFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.melnikov.bulish.my.budget.my_budget_backend.filter.JwtAuthenticationFilter;
+import com.melnikov.bulish.my.budget.my_budget_backend.model.ApiError;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.UserRepository;
-import jakarta.servlet.http.HttpServletResponse;
+import com.melnikov.bulish.my.budget.my_budget_backend.service.JwtTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.authentication.password.CompromisedPasswordChecker;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -19,10 +22,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -37,6 +40,10 @@ public class SecurityConfig {
 
     private final UserRepository repository;
 
+    private final JwtTokenService jwtTokenService;
+
+    private final ObjectMapper mapper;
+
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> repository.findByUsername(username)
@@ -48,7 +55,6 @@ public class SecurityConfig {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
-
         return authProvider;
     }
 
@@ -58,23 +64,44 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CompromisedPasswordChecker compromisedPasswordChecker() {
-        return new HaveIBeenPwnedRestApiPasswordChecker();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+
+    @Bean
+    public AuthenticationEntryPoint jwtAuthenticationEntryPoint() {
+        return (request, response, authException) -> {
+            ApiError errorResponse = new ApiError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized");
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.getWriter().write(mapper.writeValueAsString(errorResponse));
+        };
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public AccessDeniedHandler jwtAccessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            ApiError errorResponse = new ApiError(HttpStatus.FORBIDDEN.value(), "Access denied");
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.getWriter().write(mapper.writeValueAsString(errorResponse));
+        };
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtTokenService, userDetailsService());
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Collections.singletonList("https://localhost:8087")); // Adjust as needed
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // More explicit
+        config.setAllowedOrigins(Collections.singletonList("http://192.168.1.41:*"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowCredentials(true);
-        config.setAllowedHeaders(Collections.singletonList("*"));
-        config.setExposedHeaders(Collections.singletonList("Authorization"));
+        config.setAllowedHeaders(Arrays.asList("*"));
+        config.setExposedHeaders(Arrays.asList("Authorization", "Content-Disposition"));
         config.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
@@ -82,44 +109,40 @@ public class SecurityConfig {
     }
 
     private static final String[] WHITE_LIST_URL = {
-        "/register",
-        "/login",
-        "/swagger-resources",
-        "/swagger-resources/**",
-        "/swagger-ui/**",
-        "/webjars/**",
-        "/swagger-ui.html",
-        "/configuration/ui",
-        "/configuration/security",
-        "/v3/api-docs/**",
-        "/v2/api-docs",
-        "/v3/api-docs",
-        "/ws/**"
+            "/register",
+            "/login",
+            "/refresh",
+            "/swagger-resources",
+            "/swagger-resources/**",
+            "/swagger-ui/**",
+            "/webjars/**",
+            "/swagger-ui.html",
+            "/configuration/ui",
+            "/configuration/security",
+            "/v3/api-docs/**",
+            "/v2/api-docs",
+            "/v3/api-docs",
+            "/ws/**"
     };
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        CsrfTokenRequestAttributeHandler csrfTokenRequestAttributeHandler = new CsrfTokenRequestAttributeHandler();
-        httpSecurity
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests()
-                .requestMatchers(WHITE_LIST_URL).permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .exceptionHandling()
-                .authenticationEntryPoint(
-                    (request, response, authException) -> response.sendError(
-                        HttpServletResponse.SC_UNAUTHORIZED,
-                        authException.getLocalizedMessage()
-                    )
-                )
-                .and()
-                .addFilterBefore(new JwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+           // .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .cors(AbstractHttpConfigurer::disable)
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests()
+            .requestMatchers(WHITE_LIST_URL).permitAll()
+            .anyRequest().authenticated()
+            .and()
+            .sessionManagement()
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint())
+                .accessDeniedHandler(jwtAccessDeniedHandler()))
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
-        return httpSecurity.build();
+        return http.build();
     }
 }

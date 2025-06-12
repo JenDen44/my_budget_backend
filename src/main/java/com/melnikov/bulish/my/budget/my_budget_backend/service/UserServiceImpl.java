@@ -1,8 +1,8 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.AuthenticationException;
-import com.melnikov.bulish.my.budget.my_budget_backend.exception.ResourceNotFoundException;
+import com.melnikov.bulish.my.budget.my_budget_backend.exceptions.AuthenticationException;
+import com.melnikov.bulish.my.budget.my_budget_backend.exceptions.ResourceNotFoundException;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +21,8 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public boolean isUserNameUnique(String userName) {
-        return userRepo.findByUsername(userName).isEmpty();
+    public boolean isUsernameUnique(String username) {
+        return !userRepo.existsByUsername(username);
     }
 
     @Transactional(readOnly = true)
@@ -35,18 +35,23 @@ public class UserServiceImpl implements UserService {
             throw new AuthenticationException("No authenticated user is found");
         }
         var currentUserName = authentication.getName();
-        log.info("Retrieving current user with username {}", currentUserName);
 
-        return userRepo.findByUsername(currentUserName).orElseThrow(() -> {
-            log.error("ResourceNotFoundException by userName {}", currentUserName);
-            return new ResourceNotFoundException("User", currentUserName);
-        });
+        if (currentUserName == null || currentUserName.isBlank()) {
+            log.error("Authenticated user has empty username");
+            throw new AuthenticationException("Invalid username in authentication");
+        }
+
+        return findByUsername(currentUserName);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public User findByUserName(String username) {
+    public User findByUsername(String username) {
+        log.debug("Fetching user: {}", username);
         return userRepo.findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("User", username));
+                .orElseThrow(() -> {
+                    log.error("User not found: {}", username);
+                    return new ResourceNotFoundException("User", username);
+                });
     }
 }

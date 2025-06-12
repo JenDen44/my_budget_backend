@@ -1,7 +1,7 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
-import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportChart;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportTable;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.ReportChart;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.ReportTable;
 
 import java.time.LocalDate;
 import java.util.List;

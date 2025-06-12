@@ -1,18 +1,18 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.PurchaseSummaryDTO;
 import com.melnikov.bulish.my.budget.my_budget_backend.enums.Category;
-import com.melnikov.bulish.my.budget.my_budget_backend.interfaces.PurchaseForTableProjection;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportChart;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportTable;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.ReportChart;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.ReportTable;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.PurchaseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -26,20 +26,19 @@ public  class ReportServiceImpl implements ReportService {
 
     @Transactional(readOnly = true)
     public List<ReportTable> getTableReportItemsByDate(LocalDate startDate, LocalDate endDate) {
-        log.info("ReportService.getTableReportItemsByDate() started");
+        log.info("ReportServiceImpl.getTableReportItemsByDate() started");
         var purchases = getPurchasesWithinDateRange(startDate, endDate);
 
-        Map<LocalDate, Map<Category, Double>> map = new HashMap<>();
-
+        Map<LocalDate, Map<Category, BigDecimal>> map = new HashMap<>();
         for (var purchase : purchases) {
-            map.computeIfAbsent(purchase.getPurchaseDate(), k -> new HashMap<>())
-                    .merge(purchase.getCategory(), purchase.getTotalCost(), Double::sum);
+            map.computeIfAbsent(purchase.getPurchaseDate(), k -> new HashMap<>()).merge(purchase.getCategory(),
+                    purchase.getCost().multiply(BigDecimal.valueOf(purchase.getQuantity())), BigDecimal::add);
         }
 
-         return Collections.unmodifiableList(map.entrySet().stream()
+         return map.entrySet().stream()
                  .map(entry -> new ReportTable(entry.getKey(), entry.getValue()))
                  .sorted(Comparator.comparing(ReportTable::getDate))
-                 .collect(Collectors.toList()));
+                 .toList();
     }
 
     @Transactional(readOnly = true)
@@ -47,26 +46,24 @@ public  class ReportServiceImpl implements ReportService {
         log.info("ReportService.getChartReportItemsByDate() started");
         var purchases = getPurchasesWithinDateRange(startDate, endDate);
 
-        Map<Category, Double> totalByCategory = new HashMap<>();
+        Map<Category, BigDecimal> totalByCategory = new HashMap<>();
 
         for (var purchase : purchases) {
-            totalByCategory.merge(purchase.getCategory(), purchase.getTotalCost(), Double::sum);
+            totalByCategory.merge(purchase.getCategory(),
+                    purchase.getCost().multiply(BigDecimal.valueOf(purchase.getQuantity())), BigDecimal::add);
         }
 
-        return Collections.unmodifiableList(totalByCategory.entrySet().stream()
+        return totalByCategory.entrySet().stream()
                 .map(entry -> new ReportChart(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList()));
+                .toList();
     }
 
-    private List<PurchaseForTableProjection> getPurchasesWithinDateRange(LocalDate startDate, LocalDate endDate) {
+    private List<PurchaseSummaryDTO> getPurchasesWithinDateRange(LocalDate startDate, LocalDate endDate) {
         log.info("startDate {} and endDate {}", startDate, endDate);
 
         var currentUser = userService.getCurrentUser();
-        log.debug("current user id {}, username {}", currentUser.getId(), currentUser.getUsername());
+        log.debug("current user {}", currentUser);
 
-        var purchases = purchaseRepository.findPurchaseSummariesByDateRange(startDate, endDate, currentUser.getId());
-        log.debug("purchases count between startDate {} and end date {}, {} ", startDate, endDate, purchases.size());
-
-        return purchases;
+        return purchaseRepository.findPurchaseSummariesByDateRange(startDate, endDate, currentUser.getId());
     }
 }

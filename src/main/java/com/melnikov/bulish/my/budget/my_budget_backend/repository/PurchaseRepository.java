@@ -1,24 +1,32 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.repository;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.PurchaseSummaryDTO;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Purchase;
-import com.melnikov.bulish.my.budget.my_budget_backend.interfaces.PurchaseForTableProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 
-public interface PurchaseRepository extends CrudRepository<Purchase, Integer>, PagingAndSortingRepository<Purchase, Integer> {
+public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
+
 
     @Query("""
-    SELECT p.totalCost as totalCost, p.category as category, p.purchaseDate as purchaseDate
-    FROM Purchase p
-    WHERE p.purchaseDate BETWEEN ?1 AND ?2 AND p.user.id = ?3
-    """)
-    List<PurchaseForTableProjection> findPurchaseSummariesByDateRange(LocalDate startDate, LocalDate endDate, Integer userId);
+        SELECT new com.melnikov.bulish.my.budget.my_budget_backend.dto.PurchaseSummaryDTO(p.cost, p.quantity, p.category, p.purchaseDate)
+        FROM Purchase p
+        WHERE p.purchaseDate BETWEEN :start AND :end
+        AND p.user.id = :userId
+        """)
+    List<PurchaseSummaryDTO> findPurchaseSummariesByDateRange(
+            @Param("start") LocalDate startDate,
+            @Param("end") LocalDate endDate,
+            @Param("userId") Long userId
+            );
 
-    Page<Purchase> findByUserId(Integer userId, Pageable pageable);
+    @Transactional(readOnly = true)
+    Page<Purchase> findByUserId(Long userId, Pageable pageable);
 }

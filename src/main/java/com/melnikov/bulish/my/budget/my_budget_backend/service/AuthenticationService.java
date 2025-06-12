@@ -1,7 +1,7 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
-import com.melnikov.bulish.my.budget.my_budget_backend.model.AuthenticationRequest;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.AuthenticationResponse;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationRequest;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationResponse;
 
 public interface AuthenticationService {
 

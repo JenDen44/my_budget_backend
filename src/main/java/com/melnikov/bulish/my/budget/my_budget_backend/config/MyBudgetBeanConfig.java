@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class MyBudgetBeanConfig {
 
     @Bean
-    public ObjectMapper mapper() {
+    public ObjectMapper objectMapper() {
         return JsonMapper.builder()
                 .addModule(new JavaTimeModule())
                 .build();

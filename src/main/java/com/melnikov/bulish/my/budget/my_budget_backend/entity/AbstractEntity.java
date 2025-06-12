@@ -4,17 +4,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @MappedSuperclass
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class AbstractEntity {
-
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    protected Integer id;
+    protected Long id;
 }

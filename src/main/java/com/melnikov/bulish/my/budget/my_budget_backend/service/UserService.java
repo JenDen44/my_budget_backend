@@ -4,10 +4,10 @@ import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
 
 public interface UserService {
 
-    boolean isUserNameUnique(String userName);
+    boolean isUsernameUnique(String userName);
 
     User getCurrentUser();
 
-    User findByUserName(String username);
+    User findByUsername(String username);
 
 }

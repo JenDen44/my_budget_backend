@@ -1,23 +1,25 @@
-package com.melnikov.bulish.my.budget.my_budget_backend.model;
+package com.melnikov.bulish.my.budget.my_budget_backend.dto;
 
-import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.AbstractDto;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
 @Builder
+@Schema(description = "User information")
 public class UserDto extends AbstractDto {
 
-    @NotBlank(message = "username should be populated")
-    @Size(min = 7, max = 18, message = "username size should be between 7 and 18")
+    @Schema(description = "Username", example = "john_doe")
+    @NotBlank
+    @Size(min=3, max=50)
     private String username;
 
+    @Schema(description = "password", example = "Password0202!")
     @Pattern(
         regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,20}$",
         message = "Need to have one special symbol (i.e., @, #, $, %, etc.)," +
@@ -27,16 +29,4 @@ public class UserDto extends AbstractDto {
             "Minimum length of 8 characters and the maximum length of 20 characters"
     )
     private String password;
-
-    public UserDto(Integer id, String username, String password) {
-        super(id);
-        this.username = username;
-        this.password = password;
-    }
-
-    public UserDto(User user) {
-        this.id = user.getId();
-        this.username = user.getUsername();
-        this.password = user.getPassword();
-    }
 }

@@ -3,9 +3,9 @@ package com.melnikov.bulish.my.budget.my_budget_backend.service;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Purchase;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
 import com.melnikov.bulish.my.budget.my_budget_backend.enums.Category;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.PagedResponse;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseDto;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseRequest;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.PagedResponse;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.PurchaseDTO;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.PurchaseRequest;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.PurchaseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,13 +15,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,66 +48,62 @@ class PurchaseServiceImplTest {
     @BeforeEach
     void setup() {
         testUser = User.builder()
-                .id(1)
                 .username("testuser")
                 .build();
+        testUser.setId(1L);
 
         testPurchase = Purchase.builder()
-                .id(1)
                 .purchaseDate(LocalDate.now())
-                .cost(10.00)
+                .cost(BigDecimal.valueOf(10.00))
                 .quantity(2)
-                .category(Category.CLOTHE)
-                .totalCost(20.00)
+                .category(Category.CLOTHING)
                 .user(testUser)
                 .build();
+        testPurchase.setId(1L);
 
         testRequest = PurchaseRequest.builder()
                 .purchaseDate(LocalDate.now())
-                .cost(10.0)
+                .cost(BigDecimal.valueOf(10.00))
                 .quantity(2)
-                .category(Category.CLOTHE)
+                .category(Category.CLOTHING)
                 .build();
     }
 
     @Test
     void findPurchaseById() {
-        when(purchaseRepo.findById(1)).thenReturn(Optional.of(testPurchase));
+        when(purchaseRepo.findById(anyLong())).thenReturn(Optional.of(testPurchase));
 
-        PurchaseDto result = purchaseService.findPurchaseDtoById(1);
+        PurchaseDTO result = purchaseService.findPurchaseDtoById(1L);
 
         assertNotNull(result);
         assertEquals(1, result.getId());
-        assertEquals(Category.CLOTHE, result.getCategory());
-        verify(purchaseRepo, times(1)).findById(1);
+        assertEquals(Category.CLOTHING, result.getCategory());
+        verify(purchaseRepo, times(1)).findById(1L);
     }
 
     @Test
     void getPurchasesForCurrentUser() {
         Page<Purchase> purchasePage = new PageImpl<>(Collections.singletonList(testPurchase));
         when(userService.getCurrentUser()).thenReturn(testUser);
-        when(purchaseRepo.findByUserId(
-                anyInt(),
-                any(Pageable.class)
-        )).thenReturn(purchasePage);
+        when(purchaseRepo.findByUserId(anyLong(), any(Pageable.class))).thenReturn(purchasePage);
 
-        PagedResponse<PurchaseDto> response = purchaseService.getPurchasesForCurrentUser(
-                0, 10, "id", "asc"
+        PagedResponse<PurchaseDTO> response = purchaseService.getPurchasesForCurrentUser(
+                0, 1, "id", "asc"
         );
 
         assertNotNull(response);
         assertEquals(1, response.getContent().size());
         assertEquals(0, response.getPageNumber());
-        assertEquals(10, response.getPageSize());
+        assertEquals(1, response.getPageSize());
         assertEquals(1, response.getTotalElements());
 
-        PurchaseDto dto = response.getContent().get(0);
+        PurchaseDTO dto = response.getContent().getFirst();
         assertEquals(1, dto.getId());
-        assertEquals(Category.CLOTHE, dto.getCategory());
+        assertEquals(Category.CLOTHING, dto.getCategory());
 
         verify(purchaseRepo).findByUserId(
                 testUser.getId(),
-                PageRequest.of(0, 10, Sort.by("id").ascending())
+                PageRequest.of(0, 1, Sort.by("id").ascending())
         );
     }
 
@@ -116,51 +112,52 @@ class PurchaseServiceImplTest {
         when(userService.getCurrentUser()).thenReturn(testUser);
         when(purchaseRepo.save(any(Purchase.class))).thenReturn(testPurchase);
 
-        PurchaseDto result = purchaseService.savePurchase(testRequest);
+        PurchaseDTO result = purchaseService.savePurchase(testRequest);
 
         assertNotNull(result);
         assertEquals(1, result.getId());
-        assertEquals(Category.CLOTHE, result.getCategory());
-        assertEquals(20.0, result.getTotalCost());
+        assertEquals(Category.CLOTHING, result.getCategory());
+        assertEquals(20.00, result.getTotalCost().doubleValue());
 
         verify(purchaseRepo).save(any(Purchase.class));
-        verify(notificationService).sendNotificationForCreate(any(PurchaseDto.class), eq(testUser.getId()));
+        verify(notificationService).sendNotificationForCreate(any(PurchaseDTO.class), eq(testUser.getId()));
     }
 
     @Test
     void updatePurchase() {
-        PurchaseDto updateDto = new PurchaseDto();
-        updateDto.setPurchaseDate(LocalDate.now());
-        updateDto.setCost(15.00);
-        updateDto.setQuantity(3);
-        updateDto.setCategory(Category.EDUCATION);
+        PurchaseDTO updateDto = PurchaseDTO.builder()
+                .category(Category.EDUCATION)
+                .cost(BigDecimal.valueOf(10.00))
+                .purchaseDate(LocalDate.now().minusDays(15))
+                .quantity(10)
+                .build();
 
-        when(purchaseRepo.findById(1)).thenReturn(Optional.of(testPurchase));
         when(userService.getCurrentUser()).thenReturn(testUser);
-        when(purchaseRepo.save(any(Purchase.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(purchaseRepo.findById(anyLong())).thenReturn(Optional.of(testPurchase));
 
-        PurchaseDto result = purchaseService.updatePurchase(updateDto, 1);
+        PurchaseDTO result = purchaseService.updatePurchase(updateDto, 1L);
 
         assertNotNull(result);
-        assertEquals(1, result.getId());
+        assertEquals(1L, result.getId());
         assertEquals(Category.EDUCATION, result.getCategory());
-        assertEquals(20.0, result.getTotalCost());
+        assertEquals(100.00, result.getTotalCost().doubleValue());
 
-        verify(purchaseRepo).findById(1);
+        verify(userService).getCurrentUser();
+        verify(purchaseRepo).findById(anyLong());
         verify(purchaseRepo).save(any(Purchase.class));
-        verify(notificationService).sendNotificationForUpdate(any(PurchaseDto.class), eq(testUser.getId()));
+        verify(notificationService).sendNotificationForUpdate(any(PurchaseDTO.class), eq(testUser.getId()));
     }
 
     @Test
     void deletePurchase() {
-        when(purchaseRepo.findById(1)).thenReturn(Optional.of(testPurchase));
         when(userService.getCurrentUser()).thenReturn(testUser);
-        doNothing().when(purchaseRepo).deleteById(1);
+        when(purchaseRepo.findById(anyLong())).thenReturn(Optional.of(testPurchase));
+        doNothing().when(purchaseRepo).deleteById(anyLong());
 
-        purchaseService.deletePurchase(1);
+        purchaseService.deletePurchase(1L);
 
-        verify(purchaseRepo).findById(1);
-        verify(purchaseRepo).deleteById(1);
-        verify(notificationService).sendNotificationForDelete(1, testUser.getId());
+        verify(purchaseRepo).findById(anyLong());
+        verify(purchaseRepo).deleteById(anyLong());
+        verify(notificationService).sendNotificationForDelete(anyLong(), anyLong());
     }
 }

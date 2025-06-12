@@ -1,18 +1,18 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
-import com.melnikov.bulish.my.budget.my_budget_backend.model.PagedResponse;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseDto;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.PurchaseRequest;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.PagedResponse;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.PurchaseDTO;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.PurchaseRequest;
 
 public interface PurchaseService {
 
-    PurchaseDto findPurchaseDtoById(Integer id);
+    PurchaseDTO findPurchaseDtoById(Long id);
 
-    PurchaseDto savePurchase(PurchaseRequest purchase);
+    PurchaseDTO savePurchase(PurchaseRequest purchase);
 
-    PurchaseDto updatePurchase(PurchaseDto purchase, Integer id);
+    PurchaseDTO updatePurchase(PurchaseDTO purchase, Long id);
 
-    void deletePurchase(Integer id);
+    void deletePurchase(Long id);
 
-    PagedResponse<PurchaseDto> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir);
+    PagedResponse<PurchaseDTO> getPurchasesForCurrentUser(int pageNo, int pageSize, String sortBy, String sortDir);
 }

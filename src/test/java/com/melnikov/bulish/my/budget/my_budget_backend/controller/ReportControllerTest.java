@@ -2,8 +2,8 @@ package com.melnikov.bulish.my.budget.my_budget_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.melnikov.bulish.my.budget.my_budget_backend.enums.Category;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportChart;
-import com.melnikov.bulish.my.budget.my_budget_backend.model.ReportTable;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.ReportChart;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.ReportTable;
 import com.melnikov.bulish.my.budget.my_budget_backend.service.ReportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -49,11 +50,15 @@ class ReportControllerTest {
 
         reportTable = new ReportTable();
         reportTable.setDate(LocalDate.now().minusDays(2));
-        reportTable.setPurchasesByCategory(Map.of(Category.FOOD, 200.00, Category.EDUCATION, 10000.00));
+        reportTable.setPurchasesByCategory(Map.of
+                (
+                Category.FOOD, BigDecimal.valueOf(200.00),
+                Category.EDUCATION, BigDecimal.valueOf(10000.00)
+                ));
 
         reportChart = new ReportChart();
-        reportChart.setCategory(Category.CLOTHE);
-        reportChart.setTotal(850.50);
+        reportChart.setCategory(Category.CLOTHING);
+        reportChart.setTotal(BigDecimal.valueOf(850.50));
     }
 
     @Test
@@ -82,7 +87,7 @@ class ReportControllerTest {
                         .param("startDate", startDate.toString())
                         .param("endDate", endDate.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].category").value("CLOTHE"))
+                .andExpect(jsonPath("$[0].category").value("CLOTHING"))
                 .andExpect(jsonPath("$[0].total").value(850.50));
     }
 }
