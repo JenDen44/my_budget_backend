@@ -10,4 +10,6 @@ public interface AuthenticationService {
     AuthenticationResponse login(AuthenticationRequest request);
 
     AuthenticationResponse refreshToken(String authorizationHeader);
+
+    void logout(String refreshToken);
 }

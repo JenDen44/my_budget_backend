@@ -1,7 +1,9 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.model.GeneratedToken;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.core.userdetails.UserDetails;
+
 import java.util.function.Function;
 
 public interface JwtTokenService {
@@ -10,9 +12,9 @@ public interface JwtTokenService {
 
     <T> T extractClaim(String token, Function<Claims, T> claimsResolver);
 
-    String generateAccessToken(UserDetails userDetails);
+    GeneratedToken generateAccessToken(UserDetails userDetails);
 
-    String generateRefreshToken(UserDetails userDetails);
+    GeneratedToken generateRefreshToken(UserDetails userDetails);
 
     String resolveToken(String authorizationHeader);
 

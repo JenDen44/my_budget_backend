@@ -1,6 +1,7 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.constants.JWTConstants;
+import com.melnikov.bulish.my.budget.my_budget_backend.model.GeneratedToken;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.TokenRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -13,7 +14,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
-import java.util.*;
+import java.time.Instant;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Component
@@ -42,25 +47,29 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     }
 
     @Override
-    public String generateAccessToken(UserDetails userDetails) {
+    public GeneratedToken generateAccessToken(UserDetails userDetails) {
         return buildToken(new HashMap<>(), userDetails, jwtExpiration);
     }
 
     @Override
-    public String generateRefreshToken(UserDetails userDetails) {
+    public GeneratedToken generateRefreshToken(UserDetails userDetails) {
         return buildToken(new HashMap<>(), userDetails, refreshExpiration);
     }
 
-    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
-        return Jwts
-            .builder()
-            .setClaims(extraClaims)
-            .setSubject(userDetails.getUsername())
-            .setIssuedAt(new Date(System.currentTimeMillis()))
-            .setExpiration(new Date(System.currentTimeMillis() + expiration))
-            .setId(UUID.randomUUID().toString())
-            .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-            .compact();
+    private GeneratedToken buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
+        Instant issuedAt = Instant.now();
+        Instant expirationTime = issuedAt.plusMillis(expiration);
+
+        String token = Jwts.builder()
+                .setClaims(extraClaims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(Date.from(issuedAt))
+                .setExpiration(Date.from(expirationTime))
+                .setId(UUID.randomUUID().toString())
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
+
+        return new GeneratedToken(token, expirationTime);
     }
 
     private boolean isTokenExpired(String token) {

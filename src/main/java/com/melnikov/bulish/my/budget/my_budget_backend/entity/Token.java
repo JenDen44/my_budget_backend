@@ -3,6 +3,7 @@ package com.melnikov.bulish.my.budget.my_budget_backend.entity;
 import com.melnikov.bulish.my.budget.my_budget_backend.enums.TokenType;
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.Instant;
 
 @Entity
 @Table(name = "tokens")
@@ -22,6 +23,9 @@ public class Token extends AbstractEntity {
     private boolean revoked;
 
     private boolean expired;
+
+    @Column(name = "expiration_time", nullable = false)
+    private Instant expirationTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

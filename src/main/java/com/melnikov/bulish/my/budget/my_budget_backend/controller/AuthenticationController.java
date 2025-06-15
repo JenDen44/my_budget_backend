@@ -11,9 +11,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -184,5 +186,60 @@ public class AuthenticationController {
     @PostMapping("/refresh")
     public AuthenticationResponse refreshToken(@RequestBody @Valid RefreshTokenRequest request) {
         return service.refreshToken(request.getRefreshToken());
+    }
+
+    @Operation(
+            summary = "Refresh access token",
+            description = "Obtain new access token using refresh token",
+            security = @SecurityRequirement(name = "refreshToken"),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Token refreshed successfully",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = AuthenticationResponse.class),
+                                    examples = @ExampleObject(
+                                            value = "{\"accessToken\":\"eyJhbGci...\", \"refreshToken\":\"eyJhbGci...\"}"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Not Found",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(
+                                            value = "{\"code\": 404, \"message\":\"user not found\", \"fields\": \"null\"}"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Invalid or expired refresh token",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(
+                                            value = "{\"code\": 401, \"message\":\"Invalid or expired token\"}"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "422",
+                            description = "Validation error",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(
+                                            value = "{\"code\": 422, \"message\":\"Validation Error: Extracted username from token is null\", \"fields\": \"null\"}"
+                                    )
+                            )
+                    )
+            }
+    )
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/logout")
+    public void logout(@RequestBody @Valid RefreshTokenRequest logoutRequest, HttpServletRequest request) {
+        service.logout(logoutRequest.getRefreshToken());
+        new SecurityContextLogoutHandler().logout(request, null, null);
     }
 }

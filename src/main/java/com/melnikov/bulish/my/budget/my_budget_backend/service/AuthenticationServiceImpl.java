@@ -1,11 +1,13 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
-import com.melnikov.bulish.my.budget.my_budget_backend.exceptions.*;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationRequest;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Token;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
 import com.melnikov.bulish.my.budget.my_budget_backend.enums.TokenType;
-import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationRequest;
-import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationResponse;
+import com.melnikov.bulish.my.budget.my_budget_backend.exceptions.ResourceNotFoundException;
+import com.melnikov.bulish.my.budget.my_budget_backend.exceptions.ValidationException;
+import com.melnikov.bulish.my.budget.my_budget_backend.model.GeneratedToken;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.TokenRepository;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -105,10 +107,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return assignNewTokens(user);
     }
 
-    private void saveUserToken(User user, String jwtToken, TokenType tokenType) {
+    @Override
+    public void logout(String refreshToken) {
+        tokenRepository.findByToken(refreshToken)
+                .ifPresent(token -> {
+                    token.setRevoked(true);
+                    tokenRepository.save(token);
+                });
+    }
+
+    private void saveUserToken(User user, GeneratedToken jwtToken, TokenType tokenType) {
         var token = Token.builder()
             .user(user)
-            .token(jwtToken)
+            .token(jwtToken.getToken())
+            .expirationTime(jwtToken.getExpirationTime())
             .tokenType(tokenType)
             .expired(false)
             .revoked(false)
@@ -136,8 +148,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         saveUserToken(user, newRefreshToken, TokenType.BEARER);
 
         return AuthenticationResponse.builder()
-                .accessToken(newJwtToken)
-                .refreshToken(newRefreshToken)
+                .accessToken(newJwtToken.getToken())
+                .refreshToken(newRefreshToken.getToken())
                 .tokenType(TokenType.BEARER)
                 .build();
     }

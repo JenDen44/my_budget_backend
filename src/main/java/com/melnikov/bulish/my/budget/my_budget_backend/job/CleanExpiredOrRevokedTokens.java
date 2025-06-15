@@ -1,6 +1,7 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.job;
 
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.TokenRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -9,13 +10,10 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
-public class CleanExpiredToken {
+@RequiredArgsConstructor
+public class CleanExpiredOrRevokedTokens {
 
     private final TokenRepository tokenRepo;
-
-    public CleanExpiredToken(TokenRepository tokenRepo) {
-        this.tokenRepo = tokenRepo;
-    }
 
     @Scheduled(fixedRateString = "${token.clean_up:6}", timeUnit = TimeUnit.HOURS)
     public void cleanAllExpiredTokens() {

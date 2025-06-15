@@ -5,7 +5,9 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,4 +21,8 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
     @Transactional
     @Query("DELETE FROM Token t WHERE t.expired = true OR t.revoked = true")
     int deleteByExpiredTrueOrRevokedTrue();
+
+    @Query("SELECT t FROM Token t WHERE t.expirationTime < :now")
+    List<Token> findByExpirationTimeBefore(@Param("now") Instant now);
+
 }

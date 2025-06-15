@@ -1,10 +1,11 @@
 package com.melnikov.bulish.my.budget.my_budget_backend.service;
 
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationRequest;
+import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationResponse;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.Token;
 import com.melnikov.bulish.my.budget.my_budget_backend.entity.User;
 import com.melnikov.bulish.my.budget.my_budget_backend.exceptions.ValidationException;
-import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationRequest;
-import com.melnikov.bulish.my.budget.my_budget_backend.dto.AuthenticationResponse;
+import com.melnikov.bulish.my.budget.my_budget_backend.model.GeneratedToken;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.TokenRepository;
 import com.melnikov.bulish.my.budget.my_budget_backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,16 +42,21 @@ class AuthenticationServiceImplTest {
     private AuthenticationServiceImpl authService;
 
     private User mockUser;
-    private final String jwt = "jwt_token";
+    private final String access = "access_token";
     private final String refresh = "refresh_token";
 
     private AuthenticationRequest authenticationRequest;
+
+    GeneratedToken accessToken;
+    GeneratedToken refreshToken;
 
     @BeforeEach
     void setup() {
         mockUser = new User("testuser", "encodedPassword");
         mockUser.setId(1L);
         authenticationRequest = new AuthenticationRequest("testuser", "testpasswordR@$34");
+        accessToken = new GeneratedToken(access, Instant.now().plusSeconds(300));
+        refreshToken = new GeneratedToken(refresh, Instant.now().plusSeconds(3600));
     }
 
     @Test
@@ -57,13 +64,13 @@ class AuthenticationServiceImplTest {
         when(userService.isUsernameUnique(authenticationRequest.getUsername())).thenReturn(true);
         when(passwordEncoder.encode(authenticationRequest.getPassword())).thenReturn(mockUser.getPassword());
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(jwtService.generateAccessToken(any(User.class))).thenReturn(jwt);
-        when(jwtService.generateRefreshToken(any(User.class))).thenReturn(refresh);
+        when(jwtService.generateAccessToken(any(User.class))).thenReturn(accessToken);
+        when(jwtService.generateRefreshToken(any(User.class))).thenReturn(refreshToken);
 
         AuthenticationResponse response = authService.register(authenticationRequest);
 
         assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isEqualTo(jwt);
+        assertThat(response.getAccessToken()).isEqualTo(access);
         verify(userRepository).save(any(User.class));
         verify(tokenRepository).save(any(Token.class));
     }
@@ -80,13 +87,13 @@ class AuthenticationServiceImplTest {
     void login() {
         when(authenticationManager.authenticate(any())).thenReturn(null);
         when(userRepository.findByUsername(authenticationRequest.getUsername())).thenReturn(Optional.of(mockUser));
-        when(jwtService.generateAccessToken(any(User.class))).thenReturn(jwt);
-        when(jwtService.generateRefreshToken(any(User.class))).thenReturn(refresh);
+        when(jwtService.generateAccessToken(any(User.class))).thenReturn(accessToken);
+        when(jwtService.generateRefreshToken(any(User.class))).thenReturn(refreshToken);
 
         AuthenticationResponse response = authService.login(authenticationRequest);
 
         assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isEqualTo(jwt);
+        assertThat(response.getAccessToken()).isEqualTo(access);
         verify(authenticationManager).authenticate(any());
         verify(userRepository).findByUsername(authenticationRequest.getUsername());
         verify(tokenRepository).save(any(Token.class));
@@ -102,13 +109,13 @@ class AuthenticationServiceImplTest {
 
         when(userRepository.findByUsername(mockUser.getUsername())).thenReturn(Optional.of(mockUser));
         when(jwtService.validateRefreshToken(token.getToken(), mockUser)).thenReturn(true);
-        when(jwtService.generateAccessToken(any(User.class))).thenReturn(jwt);
-        when(jwtService.generateRefreshToken(any(User.class))).thenReturn(refresh);
+        when(jwtService.generateAccessToken(any(User.class))).thenReturn(accessToken);
+        when(jwtService.generateRefreshToken(any(User.class))).thenReturn(refreshToken);
 
         AuthenticationResponse response = authService.refreshToken(token.getToken());
 
         assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isEqualTo(jwt);
+        assertThat(response.getAccessToken()).isEqualTo(access);
         verify(tokenRepository).findByToken(token.getToken());
         verify(tokenRepository).save(any(Token.class));
     }
