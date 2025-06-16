@@ -61,6 +61,7 @@ My-Budget is a personal finance management API that allows users to track expens
 
 - **Mockito**
 
-## Docker instruction: run docker-compose up.
+## Docker instruction: 
+- **docker-compose up**
 
-## For detailed API documentation, visit http://localhost:8087/my_budget/swagger-ui/index.html after starting app or docker container.
+#### For detailed API documentation visit http://localhost:8087/my_budget/swagger-ui/index.html after starting app or docker container.
