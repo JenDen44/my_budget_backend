@@ -18,11 +18,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -31,6 +31,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenService jwtTokenService;
 
     private final UserDetailsService userDetailsService;
+
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
@@ -64,8 +66,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return Set.of("/register", "/login", "/refresh", "/swagger-resources","/v3/api-docs", "/swagger-ui/",
-                "/swagger-ui.html", "/swagger-ui/index.html", "/api-docs", "/ws").contains(request.getServletPath());
+        String path = request.getServletPath();
+
+        return pathMatcher.match("/register", path)
+                || pathMatcher.match("/login", path)
+                || pathMatcher.match("/refresh", path)
+                || pathMatcher.match("/swagger-resources/**", path)
+                || pathMatcher.match("/v3/api-docs/**", path)
+                || pathMatcher.match("/swagger-ui/**", path) // Главное исправление!
+                || pathMatcher.match("/swagger-ui.html", path)
+                || pathMatcher.match("/api-docs", path)
+                || pathMatcher.match("/ws", path);
     }
 
     private String parseJwt(HttpServletRequest request) {
