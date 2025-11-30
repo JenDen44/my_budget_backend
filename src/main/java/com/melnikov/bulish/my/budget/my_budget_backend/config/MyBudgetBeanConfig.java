@@ -10,6 +10,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @RequiredArgsConstructor
 public class MyBudgetBeanConfig {
+
+    //first commit
+    //second commit
+    //third commit
     @Bean
     public ObjectMapper objectMapper() {
         return JsonMapper.builder()
