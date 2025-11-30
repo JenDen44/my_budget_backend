@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @RequiredArgsConstructor
 public class MyBudgetBeanConfig {
-
     @Bean
     public ObjectMapper objectMapper() {
         return JsonMapper.builder()
